@@ -57,7 +57,8 @@ export async function GET(req: Request) {
           targetYear
         );
 
-        await sendReportEmail(user.email, user.username, monthName, targetYear, pdfBuffer);
+        const dateRangeStr = `${monthName} ${targetYear}`;
+        await sendReportEmail(user.email, user.username, dateRangeStr, pdfBuffer, 'pdf');
         results.push({ email: user.email, status: 'sent' });
       } catch (err: any) {
         results.push({ email: user.email, status: `failed: ${err.message}` });

@@ -128,7 +128,7 @@ export default function BudgetsPage() {
                   <Label htmlFor="category">Category</Label>
                   <Select 
                     value={newBudget.category} 
-                    onValueChange={(v) => setNewBudget({ ...newBudget, category: v })}
+                    onValueChange={(v) => setNewBudget({ ...newBudget, category: v || '' })}
                   >
                     <SelectTrigger className="w-full h-11">
                       <SelectValue placeholder="Select category" />

@@ -15,6 +15,16 @@ interface ReportUser {
   currencyCode?: string;
 }
 
+export function generateMonthlyReport(
+  transactions: Transaction[],
+  user: ReportUser,
+  month: number,
+  year: number
+): Buffer {
+  const dateRange = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+  return generateCustomReport(transactions, user, dateRange);
+}
+
 export function generateCustomReport(
   transactions: Transaction[],
   user: ReportUser,
