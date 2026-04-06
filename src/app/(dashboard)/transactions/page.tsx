@@ -320,15 +320,16 @@ export default function TransactionsPage() {
       </div>
 
       {/* Transactions List */}
-      <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl overflow-hidden">
-          <div className="space-y-4">
-            <div className="grid grid-cols-12 gap-8 pb-4 border-b border-white/5 text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
-              <div className="col-span-8">Type & Description</div>
-              <div className="col-span-3 text-right">Amount</div>
-              <div className="col-span-1 text-right">Action</div>
-            </div>
+      <Card className="bg-[#161818] border-none rounded-[2.5rem] shadow-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <div className="min-w-[600px] p-8 space-y-4">
+              <div className="grid grid-cols-12 gap-4 pb-4 border-b border-white/5 text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+                <div className="col-span-6">Type &amp; Description</div>
+                <div className="col-span-4 text-right">Amount</div>
+                <div className="col-span-2 text-center">Action</div>
+              </div>
 
-            <div className="relative">
+              <div className="relative">
                {loading && transactions.length === 0 ? (
                  <div className="py-20 flex flex-col items-center justify-center gap-4">
                     <div className="h-12 w-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -353,10 +354,10 @@ export default function TransactionsPage() {
                             initial={{ opacity: 0, scale: 0.98 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.98 }}
-                            className="grid grid-cols-12 gap-8 py-4 border-b border-white/5 group hover:bg-white/[0.02] transition-all rounded-[1.5rem] px-2 items-center"
+                            className="grid grid-cols-12 gap-4 py-4 border-b border-white/5 group hover:bg-white/[0.02] transition-all rounded-[1.5rem] px-2 items-center"
                           >
                             {/* Type & Description Column */}
-                            <div className="col-span-8 flex items-center gap-6">
+                            <div className="col-span-6 flex items-center gap-4">
                                <div className={cn(
                                  "h-14 w-14 rounded-[1.25rem] flex items-center justify-center shrink-0 border border-white/10 transition-transform group-hover:scale-110",
                                  tx.type === 'Income' ? "bg-emerald-400/5 text-emerald-400" : "bg-[#1C1F1F] text-muted-foreground"
@@ -372,17 +373,17 @@ export default function TransactionsPage() {
                             </div>
                             
                             {/* Amount Column */}
-                            <div className="col-span-3 text-right">
-                               <span className={cn("font-black text-xl tracking-tighter block", tx.type === 'Income' ? "text-emerald-400" : "text-white")}>
+                            <div className="col-span-4 text-right">
+                               <span className={cn("font-black text-lg tracking-tighter block whitespace-nowrap", tx.type === 'Income' ? "text-emerald-400" : "text-white")}>
                                   {tx.type === 'Income' ? '+' : '-'}{formatCurrency(tx.amount)}
                                </span>
-                               <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mt-1 block">
+                               <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mt-1 block whitespace-nowrap">
                                   {getSecondaryAmount(tx.amount)} EUR
                                </span>
                             </div>
 
                             {/* Action Column */}
-                            <div className="col-span-1 flex justify-end">
+                            <div className="col-span-2 flex justify-center">
                               {role === 'Admin' ? (
                                 <Button 
                                   variant="ghost" 
@@ -404,6 +405,7 @@ export default function TransactionsPage() {
                     </AnimatePresence>
                  </motion.div>
                )}
+              </div>
             </div>
           </div>
       </Card>

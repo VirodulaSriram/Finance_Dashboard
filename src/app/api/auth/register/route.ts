@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
@@ -13,10 +14,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'This email is already registered.' }, { status: 400 });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 12);
+
     const newUser = new User({ 
       username, 
       email, 
-      password, 
+      password: hashedPassword, 
       role: role || 'Admin', 
       country, 
       currencyCode: currencyCode || 'USD' 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
@@ -17,8 +18,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Password must be at least 4 characters long.' }, { status: 400 });
     }
 
-    // Set new password
-    user.password = newPassword;
+    // Hash and set new password
+    user.password = await bcrypt.hash(newPassword, 12);
     
     // Clear OTP fields
     user.otp = undefined;

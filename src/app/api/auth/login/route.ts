@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +13,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Account not found. Please create one to continue.' }, { status: 404 });
     }
 
-    if (user.password !== password) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return NextResponse.json({ error: 'Incorrect password. Please try again.' }, { status: 401 });
     }
 
