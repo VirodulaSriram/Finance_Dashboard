@@ -15,21 +15,11 @@ interface ReportUser {
   currencyCode?: string;
 }
 
-export function generateMonthlyReport(
-  transactions: Transaction[],
-  user: ReportUser,
-  month: number,
-  year: number
-): Buffer {
-  const dateRange = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
-  return generateCustomReport(transactions, user, dateRange);
-}
-
 export function generateCustomReport(
   transactions: Transaction[],
   user: ReportUser,
   dateRange: string
-): Buffer {
+): jsPDF {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const currency = user.currencyCode || 'USD';
 
@@ -152,5 +142,17 @@ export function generateCustomReport(
     );
   }
 
+  return doc;
+}
+
+export function generateMonthlyReport(
+  transactions: Transaction[],
+  user: ReportUser,
+  month: number,
+  year: number
+): Buffer {
+  const monthName = new Date(year, month, 1).toLocaleString('default', { month: 'long' });
+  const dateRange = `${monthName} ${year}`;
+  const doc = generateCustomReport(transactions, user, dateRange);
   return Buffer.from(doc.output('arraybuffer'));
 }

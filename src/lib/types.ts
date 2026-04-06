@@ -9,6 +9,8 @@ export interface User {
   currencyCode: string;
   phone?: string;
   avatar?: string;
+  isSharing?: boolean;
+  shareToken?: string;
 }
 
 export type TransactionType = 'Income' | 'Expense';
@@ -21,6 +23,8 @@ export interface Transaction {
   amount: number;
   category: string;
   type: TransactionType;
+  paymentMethod?: 'UPI' | 'Card' | 'Cash' | 'Net Banking' | 'Other';
+  status?: 'Success' | 'Waiting' | 'Declined';
 }
 
 export interface Budget {

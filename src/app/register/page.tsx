@@ -26,7 +26,6 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useAuthStore } from '@/lib/store/useAuthStore';
-import type { Role } from '@/lib/types';
 
 interface CountryData {
   name: { common: string };
@@ -39,7 +38,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState<Role>('Viewer');
   const [country, setCountry] = useState('');
   const [currencyCode, setCurrencyCode] = useState('USD');
   const [countries, setCountries] = useState<CountryData[]>([]);
@@ -105,7 +103,6 @@ export default function RegisterPage() {
         username, 
         email, 
         password, 
-        role,
         country,
         currencyCode
       });
@@ -195,7 +192,7 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="md:col-span-2 space-y-2">
                   <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Password</Label>
                   <div className="relative group">
                     <Input 
@@ -215,19 +212,6 @@ export default function RegisterPage() {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="role" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Account Role</Label>
-                  <Select value={role} onValueChange={(val) => val && setRole(val as Role)}>
-                    <SelectTrigger className="bg-zinc-100/50 dark:bg-zinc-900/50 border-border/50 h-11 focus-visible:ring-primary text-sm transition-all">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Viewer">Viewer</SelectItem>
-                      <SelectItem value="Admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <div className="space-y-2">

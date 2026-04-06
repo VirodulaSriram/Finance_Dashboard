@@ -8,21 +8,17 @@ import {
   Search, 
   Trash2, 
   Filter, 
-  MoreHorizontal, 
-  ArrowUpCircle, 
-  ArrowDownCircle,
   Calendar,
-  Receipt
+  Receipt,
+  ArrowUpRight,
+  ChevronRight,
+  Smartphone,
+  CreditCard,
+  Wallet,
+  Globe,
+  MoreHorizontal
 } from 'lucide-react';
 import { Transaction, TransactionType } from '@/lib/types';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
 import { 
   Dialog, 
   DialogContent, 
@@ -41,9 +37,10 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function TransactionsPage() {
   const { transactions, fetchTransactions, loading, addTransaction, deleteTransaction } = useFinanceStore();
@@ -51,11 +48,17 @@ export default function TransactionsPage() {
   const role = user?.role || 'Viewer';
   const currency = user?.currencyCode || 'USD';
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number, code: string = currency) => {
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
-      currency: currency,
+      currency: code,
     }).format(amount);
+  };
+
+  const getSecondaryAmount = (amount: number) => {
+    // Mock conversion rate: 1 INR = 0.011 EUR
+    const rate = 0.011;
+    return formatCurrency(amount * rate, 'EUR');
   };
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,10 +66,12 @@ export default function TransactionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toLocaleDateString('en-CA'),
     amount: '',
     category: 'Groceries',
-    type: 'Expense' as TransactionType
+    type: 'Expense' as TransactionType,
+    paymentMethod: 'UPI' as 'UPI' | 'Card' | 'Cash' | 'Net Banking' | 'Other',
+    status: 'Success' as 'Success' | 'Waiting' | 'Declined'
   });
   const [otherLabel, setOtherLabel] = useState('');
 
@@ -87,6 +92,12 @@ export default function TransactionsPage() {
     e.preventDefault();
     const finalCategory = formData.category === 'Other' ? (otherLabel || 'Other') : formData.category;
 
+    console.log('Final Submission Object:', {
+      ...formData,
+      category: finalCategory,
+      amount: Number(formData.amount),
+    });
+
     await addTransaction({
       ...formData,
       category: finalCategory,
@@ -99,253 +110,302 @@ export default function TransactionsPage() {
   const resetForm = () => {
     setFormData({ 
       title: '', 
-      date: new Date().toISOString().split('T')[0], 
+      date: new Date().toLocaleDateString('en-CA'), 
       amount: '', 
       category: 'Groceries', 
-      type: 'Expense' 
+      type: 'Expense',
+      paymentMethod: 'UPI',
+      status: 'Success'
     });
     setOtherLabel('');
   };
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-8 pb-12">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Transactions</h2>
-          <p className="text-muted-foreground">Monitor and manage your financial records.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="space-y-1">
+          <h2 className="text-4xl font-black text-white tracking-tighter italic">Transactions</h2>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Monitor and manage your financial records</p>
         </div>
         
-        {role === 'Admin' && (
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger
-              render={
-                <Button className="gap-2 shadow-lg shadow-primary/20" />
-              }
-            >
-              <Plus className="h-4 w-4" /> Add Transaction
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>New Transaction</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input 
-                    id="title" 
-                    placeholder="e.g., Grocery Shopping" 
-                    required 
-                    value={formData.title}
-                    onChange={e => setFormData({...formData, title: e.target.value})}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date">Date</Label>
-                    <Input 
-                      id="date" 
-                      type="date" 
-                      required 
-                      value={formData.date}
-                      onChange={e => setFormData({...formData, date: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">Amount ({currency})</Label>
-                    <Input 
-                      id="amount" 
-                      type="number" 
-                      step="0.01" 
-                      min="0" 
-                      placeholder="0.00" 
-                      required 
-                      value={formData.amount}
-                      onChange={e => setFormData({...formData, amount: e.target.value})}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="type">Type</Label>
-                    <Select 
-                      value={formData.type} 
-                      onValueChange={(val) => setFormData({...formData, type: val as TransactionType})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Expense">Expense</SelectItem>
-                        <SelectItem value="Income">Income</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select 
-                      value={formData.category} 
-                      onValueChange={(val) => setFormData({...formData, category: val || 'Other'})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {formData.type === 'Expense' ? (
-                          <>
-                            <SelectItem value="Groceries">Groceries</SelectItem>
-                            <SelectItem value="Utilities">Utilities</SelectItem>
-                            <SelectItem value="Rent">Rent</SelectItem>
-                            <SelectItem value="EMI">EMI</SelectItem>
-                            <SelectItem value="Investments">Investments</SelectItem>
-                            <SelectItem value="Traveling">Traveling</SelectItem>
-                            <SelectItem value="Savings">Savings</SelectItem>
-                            <SelectItem value="Entertainment">Entertainment</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </>
-                        ) : (
-                          <>
-                            <SelectItem value="Salary">Salary</SelectItem>
-                            <SelectItem value="Investment">Investment</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input 
+              placeholder="Search history..." 
+              className="h-12 w-full bg-[#161818] border-none rounded-2xl pl-12 text-sm focus:ring-1 focus:ring-primary/50 transition-all shadow-inner"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
-                {formData.category === 'Other' && (
-                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                    <Label htmlFor="other-label">Custom Category</Label>
+          {role === 'Admin' && (
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger>
+                <Button className="h-12 px-6 rounded-2xl bg-primary text-[#0C0E0E] font-black text-sm gap-2 shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all shrink-0">
+                  <Plus className="h-4 w-4" /> Add New
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] rounded-[2.5rem] bg-[#161818] border-white/5 p-8">
+                <DialogHeader>
+                  <DialogTitle className="text-white font-black text-2xl tracking-tight">New Transaction</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Title</Label>
                     <Input 
-                      id="other-label" 
-                      placeholder="Specify category..." 
+                      id="title" 
+                      placeholder="e.g., Grocery Shopping" 
                       required 
-                      value={otherLabel}
-                      onChange={e => setOtherLabel(e.target.value)}
+                      className="h-12 bg-[#0C0E0E] border-none rounded-xl"
+                      value={formData.title}
+                      onChange={e => setFormData(p => ({...p, title: e.target.value}))}
                     />
                   </div>
-                )}
-                <DialogFooter className="pt-4">
-                  <Button type="submit" className="w-full">Save Transaction</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Date</Label>
+                      <Input 
+                        id="date" 
+                        type="date" 
+                        required 
+                        className="h-12 bg-[#0C0E0E] border-none rounded-xl"
+                        value={formData.date}
+                        onChange={e => setFormData(p => ({...p, date: e.target.value}))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="amount" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Amount ({currency})</Label>
+                      <Input 
+                        id="amount" 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        placeholder="0.00" 
+                        required 
+                        className="h-12 bg-[#0C0E0E] border-none rounded-xl"
+                        value={formData.amount}
+                        onChange={e => setFormData(p => ({...p, amount: e.target.value}))}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="type" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Type</Label>
+                      <Select 
+                        value={formData.type} 
+                        onValueChange={(val) => setFormData(p => ({...p, type: val as TransactionType}))}
+                      >
+                        <SelectTrigger className="h-12 bg-[#0C0E0E] border-none rounded-xl">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#161818] border-white/10">
+                          <SelectItem value="Expense">Expense</SelectItem>
+                          <SelectItem value="Income">Income</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="category" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category</Label>
+                      <Select 
+                        value={formData.category} 
+                        onValueChange={(val) => setFormData(p => ({...p, category: val || 'Other'}))}
+                      >
+                        <SelectTrigger className="h-12 bg-[#0C0E0E] border-none rounded-xl">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#161818] border-white/10">
+                          {formData.type === 'Expense' ? (
+                            <>
+                              <SelectItem value="Groceries">Groceries</SelectItem>
+                              <SelectItem value="Utilities">Utilities</SelectItem>
+                              <SelectItem value="Rent">Rent</SelectItem>
+                              <SelectItem value="EMI">EMI</SelectItem>
+                              <SelectItem value="Investments">Investments</SelectItem>
+                              <SelectItem value="Traveling">Traveling</SelectItem>
+                              <SelectItem value="Savings">Savings</SelectItem>
+                              <SelectItem value="Entertainment">Entertainment</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value="Salary">Salary</SelectItem>
+                              <SelectItem value="Investment">Investment</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="method" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Payment Method</Label>
+                      <Select 
+                        value={formData.paymentMethod} 
+                        onValueChange={(val) => setFormData(p => ({...p, paymentMethod: val as any}))}
+                      >
+                        <SelectTrigger className="h-12 bg-[#0C0E0E] border-none rounded-xl">
+                          <SelectValue placeholder="Select method" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#161818] border-white/10">
+                          <SelectItem value="UPI">UPI Sync</SelectItem>
+                          <SelectItem value="Card">Credit/Debit Card</SelectItem>
+                          <SelectItem value="Cash">Physical Cash</SelectItem>
+                          <SelectItem value="Net Banking">Net Banking</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="status" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Initial Status</Label>
+                      <Select 
+                        value={formData.status} 
+                        onValueChange={(val) => setFormData(p => ({...p, status: val as any}))}
+                      >
+                        <SelectTrigger className="h-12 bg-[#0C0E0E] border-none rounded-xl">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#161818] border-white/10">
+                          <SelectItem value="Success">Success</SelectItem>
+                          <SelectItem value="Waiting">Waiting</SelectItem>
+                          <SelectItem value="Declined">Declined</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {formData.category === 'Other' && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                      <Label htmlFor="other-label" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Custom Category</Label>
+                      <Input 
+                        id="other-label" 
+                        placeholder="Specify category..." 
+                        required 
+                        className="h-12 bg-[#0C0E0E] border-none rounded-xl"
+                        value={otherLabel}
+                        onChange={e => setOtherLabel(e.target.value)}
+                      />
+                    </div>
+                  )}
+                  <DialogFooter className="pt-4">
+                    <Button type="submit" className="w-full h-14 rounded-2xl bg-primary text-[#0C0E0E] font-black shadow-xl shadow-primary/20">Save Transaction</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
 
-      <Card className="border-none shadow-md overflow-hidden bg-card">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <div className="relative w-full sm:max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search history..." 
-                className="pl-9 bg-muted/50 border-none"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+      {/* Filter Row */}
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2">
+         {['All', 'Income', 'Expense'].map((type) => (
+           <Button 
+             key={type}
+             onClick={() => setFilterType(type as any)}
+             variant="ghost"
+             className={cn(
+               "rounded-full px-6 h-10 text-xs font-black uppercase tracking-widest transition-all",
+               filterType === type 
+                 ? "bg-primary text-[#0C0E0E] hover:bg-primary/90" 
+                 : "bg-[#161818] text-muted-foreground hover:text-white"
+             )}
+           >
+             {type}
+           </Button>
+         ))}
+      </div>
+
+      {/* Transactions List */}
+      <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl overflow-hidden">
+          <div className="space-y-4">
+            <div className="grid grid-cols-12 gap-8 pb-4 border-b border-white/5 text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+              <div className="col-span-8">Type & Description</div>
+              <div className="col-span-3 text-right">Amount</div>
+              <div className="col-span-1 text-right">Action</div>
             </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select 
-                value={filterType} 
-                onValueChange={(val) => setFilterType(val as TransactionType | 'All')}
-              >
-                <SelectTrigger className="w-[140px] bg-muted/50 border-none h-9">
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Types</SelectItem>
-                  <SelectItem value="Income">Income</SelectItem>
-                  <SelectItem value="Expense">Expense</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="relative overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-muted/30">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[150px]">Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  {role === 'Admin' && <TableHead className="w-[80px]"></TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading && transactions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={role === 'Admin' ? 6 : 5} className="h-32 text-center">
-                      <div className="flex justify-center items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                        <span className="text-muted-foreground">Loading history...</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : filteredTransactions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={role === 'Admin' ? 6 : 5} className="h-32 text-center text-muted-foreground">
-                      No records found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredTransactions.map((tx) => (
-                    <TableRow key={tx.id} className="group transition-colors">
-                      <TableCell className="text-muted-foreground text-xs">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(tx.date).toLocaleDateString()}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-semibold text-sm">{tx.title}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="font-normal bg-muted/50 text-[10px] uppercase tracking-wider">
-                          {tx.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {tx.type === 'Income' ? (
-                          <div className="flex items-center gap-1.5 text-emerald-500 font-medium text-xs">
-                            <ArrowUpCircle className="h-3.5 w-3.5" /> Income
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5 text-rose-500 font-medium text-xs">
-                            <ArrowDownCircle className="h-3.5 w-3.5" /> Expense
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className={cn(
-                        "text-right font-bold tabular-nums",
-                        tx.type === 'Income' ? "text-emerald-600" : "text-foreground"
-                      )}>
-                        {tx.type === 'Income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                      </TableCell>
-                      {role === 'Admin' && (
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
-                            onClick={() => deleteTransaction(tx.id)}
+
+            <div className="relative">
+               {loading && transactions.length === 0 ? (
+                 <div className="py-20 flex flex-col items-center justify-center gap-4">
+                    <div className="h-12 w-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Loading history...</p>
+                 </div>
+               ) : filteredTransactions.length === 0 ? (
+                 <div className="py-20 flex flex-col items-center justify-center gap-4 opacity-50">
+                    <Receipt className="h-16 w-16 text-muted-foreground" />
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">No records found</p>
+                 </div>
+               ) : (
+                 <motion.div 
+                    layout
+                    className="space-y-4"
+                 >
+                    <AnimatePresence mode="popLayout">
+                      {filteredTransactions.map((tx) => {
+                        return (
+                          <motion.div
+                            key={tx.id}
+                            layout
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            className="grid grid-cols-12 gap-8 py-4 border-b border-white/5 group hover:bg-white/[0.02] transition-all rounded-[1.5rem] px-2 items-center"
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                            {/* Type & Description Column */}
+                            <div className="col-span-8 flex items-center gap-6">
+                               <div className={cn(
+                                 "h-14 w-14 rounded-[1.25rem] flex items-center justify-center shrink-0 border border-white/10 transition-transform group-hover:scale-110",
+                                 tx.type === 'Income' ? "bg-emerald-400/5 text-emerald-400" : "bg-[#1C1F1F] text-muted-foreground"
+                               )}>
+                                 {tx.type === 'Income' ? <ArrowUpRight className="h-7 w-7" /> : <Receipt className="h-7 w-7" />}
+                               </div>
+                               <div>
+                                 <h4 className="font-bold text-white text-lg leading-tight group-hover:text-primary transition-colors">{tx.title}</h4>
+                                 <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mt-1.5 flex items-center gap-2">
+                                    {tx.type} • {new Date(tx.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                 </p>
+                               </div>
+                            </div>
+                            
+                            {/* Amount Column */}
+                            <div className="col-span-3 text-right">
+                               <span className={cn("font-black text-xl tracking-tighter block", tx.type === 'Income' ? "text-emerald-400" : "text-white")}>
+                                  {tx.type === 'Income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                               </span>
+                               <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mt-1 block">
+                                  {getSecondaryAmount(tx.amount)} EUR
+                               </span>
+                            </div>
+
+                            {/* Action Column */}
+                            <div className="col-span-1 flex justify-end">
+                              {role === 'Admin' ? (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:scale-90 transition-all"
+                                  onClick={() => deleteTransaction(tx.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              ) : (
+                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-white sm:opacity-0 group-hover:opacity-100 transition-all">
+                                  <ChevronRight className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                 </motion.div>
+               )}
+            </div>
           </div>
-        </CardContent>
       </Card>
     </div>
   );

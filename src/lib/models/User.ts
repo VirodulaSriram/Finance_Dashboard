@@ -11,6 +11,8 @@ export interface IUser extends Document {
   avatar: string;
   otp?: string;
   otpExpires?: Date;
+  shareToken?: string;
+  isSharing: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,13 +21,15 @@ const UserSchema: Schema = new Schema({
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['Admin', 'Viewer'], default: 'Viewer' },
+  role: { type: String, enum: ['Admin', 'Viewer'], default: 'Admin' },
   country: { type: String },
   currencyCode: { type: String, default: 'USD' },
   phone: { type: String, default: '' },
   avatar: { type: String, default: '' },
   otp: { type: String },
-  otpExpires: { type: Date }
+  otpExpires: { type: Date },
+  shareToken: { type: String, unique: true, sparse: true },
+  isSharing: { type: Boolean, default: false }
 }, { timestamps: true });
 
 // Check if the model exists before creating a new one (important for Next.js hot reloading)

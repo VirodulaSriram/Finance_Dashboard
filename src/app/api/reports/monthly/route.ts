@@ -56,20 +56,26 @@ export async function GET(req: Request) {
     }));
 
     let buffer: Buffer;
+    let filename: string;
+    const type = (format.toUpperCase() as 'PDF' | 'EXCEL');
+
     if (format === 'excel') {
       buffer = generateCustomExcel(txList, userInfo, dateRangeString);
+      filename = `Financial_Report_${dateRangeString.replace(/ /g, '_')}.xlsx`;
     } else {
-      buffer = generateCustomReport(txList, userInfo, dateRangeString);
+      const doc = generateCustomReport(txList, userInfo, dateRangeString);
+      buffer = Buffer.from(doc.output('arraybuffer'));
+      filename = `Financial_Report_${dateRangeString.replace(/ /g, '_')}.pdf`;
     }
 
     // Send email with the attachment
-    await sendReportEmail(user.email, user.username, dateRangeString, buffer, format);
+    await sendReportEmail(user.email, user.username, buffer, filename, type);
 
-    // Return success JSON (instead of file buffer to prevent local disk download)
+    // Return success JSON
     return NextResponse.json({ 
       success: true, 
-      message: `Report for ${dateRangeString} sent to ${user.email}`,
-      format: format.toUpperCase()
+      message: `Report for ${dateRangeString} was generated and sent to your email!`,
+      format: type
     });
   } catch (err: any) {
     console.error('Report generation error:', err);

@@ -7,6 +7,8 @@ export interface ITransaction extends Document {
   amount: number;
   category: string;
   type: 'Income' | 'Expense';
+  paymentMethod?: 'UPI' | 'Card' | 'Cash' | 'Net Banking' | 'Other';
+  status?: 'Success' | 'Waiting' | 'Declined';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,6 +20,8 @@ const TransactionSchema: Schema = new Schema({
   amount: { type: Number, required: true },
   category: { type: String, required: true },
   type: { type: String, enum: ['Income', 'Expense'], required: true },
+  paymentMethod: { type: String, enum: ['UPI', 'Card', 'Cash', 'Net Banking', 'Other'], required: false },
+  status: { type: String, enum: ['Success', 'Waiting', 'Declined'], required: false, default: 'Success' },
 }, { timestamps: true });
 
 const Transaction: Model<ITransaction> = mongoose.models.Transaction || mongoose.model<ITransaction>('Transaction', TransactionSchema);

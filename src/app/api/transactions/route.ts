@@ -9,7 +9,19 @@ export async function GET(req: Request) {
     const userId = req.headers.get('user-id');
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const transactions = await Transaction.find({ userId });
+    const { searchParams } = new URL(req.url);
+    const fromStr = searchParams.get('from');
+    const toStr = searchParams.get('to');
+
+    const query: any = { userId };
+    if (fromStr && toStr) {
+      const start = new Date(fromStr);
+      const end = new Date(toStr);
+      end.setHours(23, 59, 59, 999);
+      query.date = { $gte: start, $lte: end };
+    }
+
+    const transactions = await Transaction.find(query).sort({ date: -1 });
     
     const formatted = transactions.map(t => ({ 
       id: t._id, 
@@ -18,7 +30,9 @@ export async function GET(req: Request) {
       date: t.date, 
       amount: t.amount, 
       category: t.category, 
-      type: t.type 
+      type: t.type,
+      paymentMethod: t.paymentMethod,
+      status: t.status || 'Success'
     }));
     
     return NextResponse.json(formatted);
@@ -33,12 +47,23 @@ export async function POST(req: Request) {
     const userId = req.headers.get('user-id');
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { title, date, amount, category, type } = await req.json();
+    const body = await req.json();
+    console.log('API POST Body:', body);
+    const { title, date, amount, category, type, paymentMethod, status } = body;
     if (!title || !date || amount == null || !category || !type) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const newTx = new Transaction({ userId, title, date, amount, category, type });
+    const newTx = new Transaction({ 
+      userId, 
+      title, 
+      date, 
+      amount, 
+      category, 
+      type, 
+      paymentMethod: paymentMethod || 'Other',
+      status: status || 'Success'
+    });
     await newTx.save();
     
     return NextResponse.json({ 
@@ -48,7 +73,9 @@ export async function POST(req: Request) {
       date: newTx.date, 
       amount: newTx.amount, 
       category: newTx.category, 
-      type: newTx.type 
+      type: newTx.type,
+      paymentMethod: newTx.paymentMethod,
+      status: newTx.status
     }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: 'Failed to save transaction: ' + err.message }, { status: 500 });

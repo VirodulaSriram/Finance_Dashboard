@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       username, 
       email, 
       password, 
-      role: role || 'Viewer', 
+      role: role || 'Admin', 
       country, 
       currencyCode: currencyCode || 'USD' 
     });

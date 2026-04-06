@@ -4,105 +4,48 @@ import { useEffect, useMemo, useState } from 'react';
 import { useFinanceStore } from '@/lib/store/useFinanceStore';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 import { 
-  ArrowDownRight, 
   ArrowUpRight, 
-  DollarSign, 
-  TrendingUp, 
-  TrendingDown, 
   Wallet,
   Receipt,
-  Download,
-  CheckCircle,
-  FileText,
-  FileSpreadsheet,
-  ChevronDown,
-  Calendar,
-  Send,
-  Loader2
+  Plus,
+  ArrowRight,
+  TrendingUp,
+  Heart,
+  Cpu,
+  MoreHorizontal,
+  Filter,
+  CreditCard,
+  Banknote,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+  Sparkles
 } from 'lucide-react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
-} from 'recharts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const COLORS = ['var(--primary)', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'];
+import { motion } from 'framer-motion';
+import { Progress } from '@/components/ui/progress';
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
 
 export default function DashboardPage() {
   const { transactions, fetchTransactions, loading } = useFinanceStore();
   const { user } = useAuthStore();
   const currency = user?.currencyCode || 'USD';
-  
-  const [reportLoading, setReportLoading] = useState(false);
-  const [reportSent, setReportSent] = useState(false);
-  const [reportStatus, setReportStatus] = useState('');
-  
-  const [isCustomOpen, setIsCustomOpen] = useState(false);
-  const [customRange, setCustomRange] = useState({ 
-    startDate: '', 
-    endDate: '', 
-    format: 'pdf' as 'pdf' | 'excel' 
-  });
 
-  const handleSendReport = async (options: { format: 'pdf' | 'excel'; startDate?: string; endDate?: string }) => {
-    if (!user) return;
-    setReportLoading(true);
-    setReportSent(false);
-    
-    try {
-      let url = `/api/reports/monthly?format=${options.format}`;
-      if (options.startDate && options.endDate) {
-        url += `&startDate=${options.startDate}&endDate=${options.endDate}`;
-      }
-      
-      const res = await fetch(url, { headers: { 'User-Id': user.id } });
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.error || 'Failed to send report');
-      
-      setReportStatus(data.message);
-      setReportSent(true);
-      if (isCustomOpen) setIsCustomOpen(false);
-      
-      setTimeout(() => setReportSent(false), 8000);
-    } catch (err: any) {
-      console.error(err);
-      alert(err.message);
-    } finally {
-      setReportLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(undefined, {
@@ -111,11 +54,7 @@ export default function DashboardPage() {
     }).format(amount);
   };
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
-
-  const { totalIncome, totalExpense, balance } = useMemo(() => {
+  const { totalIncome, totalExpense, balance, transactionCount } = useMemo(() => {
     return transactions.reduce(
       (acc, curr) => {
         if (curr.type === 'Income') {
@@ -125,32 +64,43 @@ export default function DashboardPage() {
           acc.totalExpense += curr.amount;
           acc.balance -= curr.amount;
         }
+        acc.transactionCount += 1;
         return acc;
       },
-      { totalIncome: 0, totalExpense: 0, balance: 0 }
+      { totalIncome: 0, totalExpense: 0, balance: 0, transactionCount: 0 }
     );
   }, [transactions]);
 
-  const categoryData = useMemo(() => {
-    const expenses = transactions.filter(t => t.type === 'Expense');
-    const categories: Record<string, number> = {};
-    expenses.forEach(t => {
-      categories[t.category] = (categories[t.category] || 0) + t.amount;
-    });
-    return Object.entries(categories).map(([name, value]) => ({ name, value }));
+  const recentTransactions = useMemo(() => {
+    return [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 4);
   }, [transactions]);
 
-  const trendData = useMemo(() => {
-    const sorted = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    let currentBalance = 0;
-    return sorted.map(t => {
-      currentBalance += t.type === 'Income' ? t.amount : -t.amount;
-      return {
-        date: new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-        balance: currentBalance
-      };
+  const chartData = useMemo(() => {
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return d.toISOString().split('T')[0];
     });
+
+    const dataMap = last7Days.reduce((acc, date) => {
+      acc[date] = { date: new Date(date).toLocaleDateString(undefined, { weekday: 'short' }), income: 0, expense: 0 };
+      return acc;
+    }, {} as Record<string, any>);
+
+    transactions.forEach(t => {
+      const date = t.date.split('T')[0];
+      if (dataMap[date]) {
+        if (t.type === 'Income') dataMap[date].income += t.amount;
+        else dataMap[date].expense += t.amount;
+      }
+    });
+
+    return Object.values(dataMap);
   }, [transactions]);
+
+  // Mock Calendar Data for visual representation
+  const calendarDays = Array.from({ length: 31 }, (_, i) => i + 1);
+  const activeDays = [1, 10, 17, 24];
 
   if (loading && transactions.length === 0) {
     return (
@@ -161,293 +111,214 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Welcome Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-bold tracking-tight">Overview</h2>
-          <p className="text-sm text-muted-foreground">
-            Welcome back, {user?.username}. Here's what's happening with your money.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {reportSent && (
-            <motion.span 
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium bg-emerald-50 py-1.5 px-3 rounded-full border border-emerald-100"
-            >
-              <CheckCircle className="h-3.5 w-3.5" />
-              {reportStatus}
-            </motion.span>
-          )}
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-10">
+      
+      {/* Left Section: Overview & Recent Transactions */}
+      <div className="lg:col-span-8 space-y-8">
+        
+        {/* Top Widgets row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
-          <Dialog open={isCustomOpen} onOpenChange={setIsCustomOpen}>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 text-xs h-9"
-                    disabled={reportLoading}
-                  >
-                    {reportLoading ? (
-                      <><Loader2 className="h-3.5 w-3.5 animate-spin" />Preparing...</>
-                    ) : (
-                      <><Send className="h-3.5 w-3.5" />Share Report<ChevronDown className="h-3 w-3 ml-0.5" /></>
-                    )}
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-2 py-1.5 text-xs text-muted-foreground font-medium border-b border-border mb-1">
-                  Email Quick Report
-                </div>
-                <DropdownMenuItem
-                  className="gap-2 cursor-pointer"
-                  onClick={() => handleSendReport({ format: 'pdf' })}
-                >
-                  <FileText className="h-4 w-4 text-rose-500" />
-                  <div>
-                    <p className="text-sm font-medium">Send PDF (Last Month)</p>
-                    <p className="text-[10px] text-muted-foreground uppercase py-0.5">Automated Summary</p>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="gap-2 cursor-pointer"
-                  onClick={() => handleSendReport({ format: 'excel' })}
-                >
-                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-                  <div>
-                    <p className="text-sm font-medium">Send Excel (Last Month)</p>
-                    <p className="text-[10px] text-muted-foreground uppercase py-0.5">Detailed Data Sheets</p>
-                  </div>
-                </DropdownMenuItem>
-                
-                <div className="h-px bg-border my-1" />
-                
-                <DialogTrigger render={
-                  <DropdownMenuItem className="gap-2 cursor-pointer">
-                    <Calendar className="h-4 w-4 text-indigo-600" />
-                    <div>
-                      <p className="text-sm font-medium">Custom Date Range...</p>
-                      <p className="text-[10px] text-muted-foreground uppercase py-0.5">Select Specific Period</p>
-                    </div>
-                  </DropdownMenuItem>
-                } />
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Custom Report Generation</DialogTitle>
-                <DialogDescription>
-                  Select a specific period and format. Results will be sent to <strong>{user?.email}</strong>.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-6 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="from">Start Date</Label>
-                    <Input
-                      id="from"
-                      type="date"
-                      className="h-11"
-                      value={customRange.startDate}
-                      onChange={(e) => setCustomRange({ ...customRange, startDate: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="to">End Date</Label>
-                    <Input
-                      id="to"
-                      type="date"
-                      className="h-11"
-                      value={customRange.endDate}
-                      onChange={(e) => setCustomRange({ ...customRange, endDate: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Report Format</Label>
-                  <Select 
-                    value={customRange.format} 
-                    onValueChange={(v) => setCustomRange({ ...customRange, format: v as any })}
-                  >
-                    <SelectTrigger className="w-full h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pdf">Professional PDF Summary</SelectItem>
-                      <SelectItem value="excel">Detailed Excel Workbook</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          {/* Overview Widget */}
+          <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative group">
+            <div className="flex items-center justify-between mb-6">
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-white tracking-tight">Financial Trends</h3>
+                <p className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground opacity-50">Last 7 Days Overview</p>
               </div>
-              <DialogFooter className="px-0">
-                <Button 
-                  className="w-full h-11 gap-2" 
-                  disabled={reportLoading || !customRange.startDate || !customRange.endDate}
-                  onClick={() => handleSendReport(customRange)}
-                >
-                  {reportLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Send className="h-4 w-4" />}
-                  Send Report to Email
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+              <div className="flex flex-col items-end">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                  {new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+            </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border border-border card-shadow hover:card-shadow-hover transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Balance</CardTitle>
-            <div className="h-8 w-8 bg-primary/10 flex items-center justify-center">
-              <Wallet className="h-4 w-4 text-primary" />
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-white">{transactionCount}</span>
+                <span className="text-[9px] uppercase font-black tracking-widest text-muted-foreground mt-1 opacity-60">Total TX</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-emerald-400">{transactions.filter(t => t.type === 'Income').length}</span>
+                <span className="text-[9px] uppercase font-black tracking-widest text-emerald-400 mt-1 opacity-60">Incomes</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-primary">{transactions.filter(t => t.type === 'Expense').length}</span>
+                <span className="text-[9px] uppercase font-black tracking-widest text-primary mt-1 opacity-60">Outcomes</span>
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold tracking-tight">{formatCurrency(balance)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Current available funds</p>
-          </CardContent>
-        </Card>
-        <Card className="border border-border card-shadow hover:card-shadow-hover transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Income</CardTitle>
-            <div className="h-8 w-8 bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-              <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
-              {formatCurrency(totalIncome)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Money flowing in</p>
-          </CardContent>
-        </Card>
-        <Card className="border border-border card-shadow hover:card-shadow-hover transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
-            <div className="h-8 w-8 bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
-              <TrendingDown className="h-4 w-4 text-rose-600 dark:text-rose-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400">
-              {formatCurrency(totalExpense)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Money flowing out</p>
-          </CardContent>
-        </Card>
-      </div>
 
-
-      {/* Charts Grid */}
-      <div className="grid gap-4 md:grid-cols-7">
-        <Card className="md:col-span-4 border border-border card-shadow-md">
-          <CardHeader>
-            <CardTitle>Balance Trend</CardTitle>
-            <CardDescription>Visualizing your wealth over time</CardDescription>
-          </CardHeader>
-          <CardContent className="h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-                <defs>
-                  <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.2} />
-                <XAxis 
-                  dataKey="date" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 12, fill: 'var(--foreground)' }}
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 12, fill: 'var(--foreground)' }}
-                  tickFormatter={(value: number) => formatCurrency(value).replace(/\.00$/, '')}
-                />
-                <Tooltip 
-                  formatter={(value: any) => formatCurrency(value)}
-                  contentStyle={{ 
-                    backgroundColor: 'var(--card)', 
-                    border: '1px solid var(--border)',
-                    borderRadius: '0px',
-                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                    color: 'var(--foreground)'
-                  }}
-                  itemStyle={{ color: 'var(--primary)', fontWeight: '600' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="balance" 
-                  stroke="var(--primary)" 
-                  strokeWidth={4} 
-                  dot={{ r: 4, fill: 'var(--primary)', strokeWidth: 2, stroke: 'hsl(var(--background))' }} 
-                  activeDot={{ r: 8, strokeWidth: 0 }} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-3 border border-border card-shadow-md">
-          <CardHeader>
-            <CardTitle>Expense Breakdown</CardTitle>
-            <CardDescription>Where your money is going</CardDescription>
-          </CardHeader>
-          <CardContent className="h-[350px] flex flex-col items-center justify-center">
-            {categoryData.length > 0 ? (
+            <div className="h-[200px] w-full mt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={85}
-                    outerRadius={110}
-                    paddingAngle={8}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
+                <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#34d399" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#34d399" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#FB7185" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#FB7185" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fontWeight: 700, fill: 'rgba(255,255,255,0.3)' }} 
+                    dy={10}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fontWeight: 700, fill: 'rgba(255,255,255,0.3)' }} 
+                  />
                   <Tooltip 
-                    formatter={(value: any) => formatCurrency(value)}
                     contentStyle={{ 
-                      backgroundColor: 'var(--card)', 
-                      border: '1px solid var(--border)',
-                      borderRadius: '0px',
-                      color: 'var(--foreground)'
+                      backgroundColor: '#0C0E0E', 
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '16px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
                     }}
+                    itemStyle={{ padding: '2px 0' }}
+                    cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }}
                   />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    height={36} 
-                    iconType="circle"
-                    formatter={(value) => <span className="text-xs font-medium">{value}</span>}
+                  <Area 
+                    type="monotone" 
+                    dataKey="income" 
+                    stroke="#34d399" 
+                    strokeWidth={4}
+                    fillOpacity={1} 
+                    fill="url(#colorIncome)" 
                   />
-                </PieChart>
+                  <Area 
+                    type="monotone" 
+                    dataKey="expense" 
+                    stroke="#FB7185" 
+                    strokeWidth={4}
+                    fillOpacity={1} 
+                    fill="url(#colorExpense)" 
+                  />
+                </AreaChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center text-muted-foreground gap-2">
-                <Receipt className="h-10 w-10 opacity-20" />
-                <p className="text-sm">No expenses recorded yet.</p>
-              </div>
-            )}
-          </CardContent>
+            </div>
+          </Card>
+
+          {/* Your Balance Card */}
+          <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden flex flex-col">
+             <div className="flex items-center justify-between mb-8">
+               <h3 className="text-lg font-bold text-white tracking-tight">Your Balance</h3>
+               <Badge className="bg-white/5 border-white/5 text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{currency} <ArrowUpRight className="ml-1 h-3 w-3" /></Badge>
+             </div>
+
+             <div className="space-y-1 mb-8">
+               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Balance</p>
+               <div className="flex items-end gap-3">
+                 <h2 className="text-4xl font-black text-white tracking-tight">{formatCurrency(balance).replace('$', '').trim()}</h2>
+                 <div className="mb-1.5 p-1.5 bg-primary/10 rounded-lg text-primary border border-primary/20">
+                    <Wallet className="h-4 w-4" />
+                 </div>
+               </div>
+               <p className="text-xs font-bold text-emerald-400 mt-2 flex items-center gap-1">
+                 Compared to last month <span className="px-1.5 py-0.5 bg-emerald-400/10 rounded-md">+24.17%</span>
+               </p>
+             </div>
+
+             <div className="mt-auto relative z-10">
+               <div className="bg-gradient-to-br from-white/10 to-transparent p-6 rounded-[2rem] border border-white/5 relative overflow-hidden group">
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                    <span className="text-xs font-bold text-white tracking-wide">Finance Health</span>
+                  </div>
+                  <p className="text-[10px] text-center text-muted-foreground mb-4">is updating health status now...</p>
+                  
+                  {/* Decorative Globe-like element */}
+                  <div className="h-24 w-full flex items-center justify-center relative">
+                    <div className="absolute inset-0 bg-primary/5 rounded-full blur-2xl" />
+                    <div className="h-20 w-32 border-2 border-dashed border-primary/20 rounded-full flex items-center justify-center animate-[spin_10s_linear_infinite]">
+                      <div className="h-10 w-20 border-2 border-primary/30 rounded-full" />
+                    </div>
+                  </div>
+               </div>
+             </div>
+          </Card>
+        </div>
+
+        {/* Recent Transactions List */}
+        <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl overflow-hidden">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-lg font-bold text-white tracking-tight">Recent Transactions</h3>
+            <Button variant="ghost" size="sm" className="bg-white/5 border border-white/5 rounded-full text-xs font-bold text-muted-foreground gap-2 hover:text-white">
+              <Filter className="h-3.5 w-3.5" /> Filter
+            </Button>
+          </div>
+
+          <div className="space-y-0 text-sm">
+            <div className="grid grid-cols-12 gap-4 pb-4 border-b border-white/5 text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+              <div className="col-span-7">Type & Description</div>
+              <div className="col-span-5 text-right">Amount</div>
+            </div>
+
+            {recentTransactions.map((t, i) => {
+              const eurAmount = (t.amount * 0.011).toFixed(2);
+              return (
+                <div key={t.id} className="grid grid-cols-12 gap-4 py-6 border-b border-white/5 group hover:bg-white/[0.02] transition-colors rounded-3xl px-1">
+                  <div className="col-span-7 flex items-center gap-4">
+                    <div className={cn(
+                      "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 border border-white/5",
+                      t.type === 'Income' ? "bg-emerald-400/5 text-emerald-400" : "bg-primary/5 text-primary"
+                    )}>
+                      {t.type === 'Income' ? <ArrowUpRight className="h-6 w-6" /> : <Receipt className="h-6 w-6" />}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white text-base leading-tight">{t.title}</h4>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1">{t.type} • {new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+                  <div className="col-span-5 flex flex-col justify-center text-right">
+                    <span className={cn("font-black text-xl tracking-tighter", t.type === 'Income' ? "text-emerald-400" : "text-white")}>
+                      {t.type === 'Income' ? '+' : '-'}{formatCurrency(t.amount)}
+                    </span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5 opacity-50">€{eurAmount} EUR</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </Card>
       </div>
+
+      {/* Right Section: Quick Action & Goals */}
+      <div className="lg:col-span-4 space-y-8">
+        
+        {/* Reset Card */}
+        <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl flex flex-col items-center justify-center text-center">
+          <div className="h-20 w-20 bg-rose-500/10 rounded-full flex items-center justify-center mb-6 border border-rose-500/20">
+             <TrendingUp className="h-10 w-10 text-rose-500 rotate-180" />
+          </div>
+          <h3 className="text-2xl font-black text-white tracking-tight mb-2">Reset Data</h3>
+          <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest mb-8 px-4 opacity-70">Clear all your goals and budgets to start fresh</p>
+          
+          <Button 
+            className="w-full h-14 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-sm shadow-xl shadow-rose-500/20"
+            onClick={async () => {
+              if (confirm('Are you sure you want to reset all goals and budgets? This cannot be undone.')) {
+                await useFinanceStore.getState().resetGoals();
+                await useFinanceStore.getState().resetBudgets();
+                alert('Data has been reset.');
+              }
+            }}
+          >
+            Reset All Now
+          </Button>
+        </Card>
+
+
+      </div>
+
     </div>
   );
 }

@@ -11,6 +11,10 @@ interface AuthState {
   updateUser: (user: Partial<User>) => void;
   logout: () => void;
   setHasHydrated: (state: boolean) => void;
+  compactMode: boolean;
+  setCompactMode: (value: boolean) => void;
+  accentColor: string;
+  setAccentColor: (color: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -27,6 +31,10 @@ export const useAuthStore = create<AuthState>()(
         })),
       logout: () => set({ user: null, token: null, isAuthenticated: false }),
       setHasHydrated: (state) => set({ _hasHydrated: state }),
+      compactMode: false,
+      setCompactMode: (value) => set({ compactMode: value }),
+      accentColor: 'indigo',
+      setAccentColor: (color) => set({ accentColor: color }),
     }),
     {
       name: 'auth-storage',
