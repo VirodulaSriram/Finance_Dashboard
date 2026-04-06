@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useFinanceStore } from '@/lib/store/useFinanceStore';
 import { 
   User, 
   Lock, 
@@ -141,15 +142,27 @@ const ColorSelector = () => {
 
 export default function SettingsPage() {
   const { user, logout, compactMode, setCompactMode, accentColor, setAccentColor } = useAuthStore();
+  const { resetGoals, resetBudgets } = useFinanceStore();
   const [activeSection, setActiveSection] = useState('profile');
   const [saved, setSaved] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const router = useRouter();
 
   const handleSave = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
+  };
+
+  const handleResetData = async () => {
+    setIsResetting(true);
+    try {
+      await resetGoals();
+      await resetBudgets();
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -271,6 +284,23 @@ export default function SettingsPage() {
                         <h4 className="font-bold text-rose-500">Danger Zone</h4>
                         <p className="text-xs text-muted-foreground">Irreversible account actions</p>
                       </div>
+                    </div>
+
+                    {/* Reset Data */}
+                    <div className="bg-rose-500/[0.02] border border-rose-500/10 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 mb-4">
+                      <div className="space-y-1">
+                        <p className="font-bold text-sm">Reset Goals &amp; Budgets</p>
+                        <p className="text-xs text-muted-foreground max-w-sm">Clears all your saved goals and budgets. Your transactions will not be affected.</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={handleResetData}
+                        disabled={isResetting}
+                        className="rounded-xl px-6 h-10 font-bold gap-2 text-rose-500 border-rose-500/30 hover:bg-rose-500/10 shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {isResetting ? 'Resetting...' : 'Reset Data'}
+                      </Button>
                     </div>
                     <div className="bg-rose-500/[0.02] border border-rose-500/10 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                       <div className="space-y-1">

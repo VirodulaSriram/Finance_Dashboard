@@ -41,6 +41,7 @@ export default function GoalsPage() {
   const { user } = useAuthStore();
   const { goals, fetchGoals, addGoal, resetGoals, loading } = useFinanceStore();
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isBoostOpen, setIsBoostOpen] = useState(false);
   const [newGoal, setNewGoal] = useState({ 
     title: '', 
     target: '', 
@@ -320,12 +321,76 @@ export default function GoalsPage() {
                 Stay consistent! Users who track their goals are 40% more likely to achieve them within their deadline.
               </p>
             </div>
-            <Button className="bg-white text-black font-black px-10 h-14 rounded-2xl hover:bg-zinc-200 transition-colors shadow-xl">
+            <Button
+              className="bg-white text-black font-black px-10 h-14 rounded-2xl hover:bg-zinc-200 transition-colors shadow-xl shrink-0"
+              onClick={() => setIsBoostOpen(true)}
+            >
               Boost Savings
             </Button>
           </CardContent>
         </Card>
       )}
+
+      {/* Boost Savings Dialog - always mounted so it can open from button click */}
+      <Dialog open={isBoostOpen} onOpenChange={setIsBoostOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Add Income</DialogTitle>
+            <DialogDescription>Record an income to boost your savings progress.</DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const fd = new FormData(e.target as HTMLFormElement);
+              const { useFinanceStore: fs } = await import('@/lib/store/useFinanceStore');
+              await fs.getState().addTransaction({
+                title: (fd.get('category') as string) || 'Income',
+                date: fd.get('date') as string,
+                amount: Number(fd.get('amount')),
+                category: fd.get('category') as string,
+                type: 'Income',
+                paymentMethod: 'Other',
+                status: 'Success',
+              });
+              setIsBoostOpen(false);
+            }}
+            className="space-y-4 pt-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="boost-category">Category</Label>
+              <Select name="category" defaultValue="Salary">
+                <SelectTrigger id="boost-category" className="h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Salary">Salary</SelectItem>
+                  <SelectItem value="Freelance">Freelance</SelectItem>
+                  <SelectItem value="Business">Business</SelectItem>
+                  <SelectItem value="Investment Returns">Investment Returns</SelectItem>
+                  <SelectItem value="Rental Income">Rental Income</SelectItem>
+                  <SelectItem value="Bonus">Bonus</SelectItem>
+                  <SelectItem value="Gift">Gift</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="boost-amount">Amount</Label>
+                <Input id="boost-amount" name="amount" type="number" min="0" step="0.01" placeholder="0.00" required className="h-11" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="boost-date">Date</Label>
+                <Input id="boost-date" name="date" type="date" defaultValue={new Date().toLocaleDateString('en-CA')} required className="h-11" />
+              </div>
+            </div>
+            <DialogFooter className="pt-2">
+              <Button type="submit" className="w-full h-11">Add Income</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

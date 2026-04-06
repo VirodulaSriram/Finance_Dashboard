@@ -25,7 +25,8 @@ import {
   CheckCircle2,
   Calendar,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Download
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 import { cn } from '@/lib/utils';
@@ -40,8 +41,39 @@ export function ReportModal({ isOpen, onClose }: ReportModalProps) {
   const { user } = useAuthStore();
   const [format, setFormat] = useState<'pdf' | 'excel'>('pdf');
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleDownload = async () => {
+    if (!user) return;
+    setDownloading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/reports/send?format=${format}&download=true`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, format, download: true }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to generate report');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `financial-report-${new Date().toISOString().slice(0, 7)}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!user) return;
@@ -153,19 +185,35 @@ export function ReportModal({ isOpen, onClose }: ReportModalProps) {
                   </p>
                 )}
 
-                <Button 
-                  onClick={handleGenerate}
-                  disabled={loading}
-                  className="w-full h-16 rounded-[1.5rem] bg-primary hover:bg-primary/90 text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 gap-3 group"
-                >
-                  {loading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
-                      Generate & Send <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    onClick={handleDownload}
+                    disabled={downloading || loading}
+                    variant="ghost"
+                    className="h-16 rounded-[1.5rem] bg-white/5 hover:bg-white/10 text-white font-black text-xs uppercase tracking-widest gap-2 border border-white/10"
+                  >
+                    {downloading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                    Download
+                  </Button>
+                  <Button 
+                    onClick={handleGenerate}
+                    disabled={loading || downloading}
+                    className="h-16 rounded-[1.5rem] bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 gap-2 group"
+                  >
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Mail className="h-4 w-4" /> Send
+                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </motion.div>
           ) : (

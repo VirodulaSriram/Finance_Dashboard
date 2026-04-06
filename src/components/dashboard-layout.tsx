@@ -22,7 +22,8 @@ import {
   ArrowUpRight,
   Share2,
   Menu as MenuIcon,
-  TrendingDown
+  TrendingDown,
+  Shield
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -62,6 +63,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const { user, logout, _hasHydrated, compactMode, accentColor } = useAuthStore();
   const { transactions, fetchTransactions } = useFinanceStore();
+
+  // Build nav items - Admin Console only visible to Admin users
+  const allSidebarItems = [
+    ...sidebarItems,
+    ...(user?.role === 'Admin' ? [{ label: 'Admin Console', icon: Shield, href: '/admin' }] : []),
+  ];
 
   useEffect(() => {
     if (user) {
@@ -159,7 +166,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Main Menu */}
           <div className="space-y-1.5">
             {isSidebarOpen && <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Menu</p>}
-            {sidebarItems.map((item) => {
+            {allSidebarItems.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link key={item.href} href={item.href} onClick={() => typeof window !== 'undefined' && window.innerWidth < 768 && setIsSidebarOpen(false)}>
@@ -206,24 +213,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             })}
           </div>
           
-          {/* Logout Section */}
-          <div className="space-y-1.5 mt-4">
-             <Button
-               variant="ghost"
-               onClick={handleLogout}
-               className={cn(
-                 "w-full justify-start gap-4 h-12 text-sm font-bold rounded-2xl transition-all duration-300 group py-6",
-                 "text-rose-500 hover:bg-rose-500/10 hover:text-rose-600"
-               )}
-             >
-               <LogOut className={cn("h-5 w-5 shrink-0 transition-all", "group-hover:scale-110")} />
-               {isSidebarOpen && <span>Logout</span>}
-             </Button>
-          </div>
-
           {/* Activity Chart Section */}
           {isSidebarOpen && (
-            <div className="mt-auto mb-6 p-1">
+            <div className="mt-auto mb-4 p-1">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -290,6 +282,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </motion.div>
             </div>
           )}
+
+          {/* Logout - pinned at bottom */}
+          <div className="pb-4 mt-auto">
+             <Button
+               variant="ghost"
+               onClick={handleLogout}
+               className={cn(
+                 "w-full justify-start gap-4 h-12 text-sm font-bold rounded-2xl transition-all duration-300 group py-6",
+                 "text-rose-500 hover:bg-rose-500/10 hover:text-rose-600"
+               )}
+             >
+               <LogOut className={cn("h-5 w-5 shrink-0 transition-all", "group-hover:scale-110")} />
+               {isSidebarOpen && <span>Logout</span>}
+             </Button>
+          </div>
         </div>
       </motion.aside>
 
@@ -315,10 +322,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="relative w-80 group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input 
-                placeholder="Search or type command" 
+                placeholder="Search transactions..." 
                 className="h-12 w-full bg-[#0C0E0E] border-none rounded-2xl pl-12 text-sm focus:ring-1 focus:ring-primary/50 transition-all shadow-inner"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const q = (e.target as HTMLInputElement).value.trim();
+                    if (q) router.push(`/transactions?q=${encodeURIComponent(q)}`);
+                  }
+                }}
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-white/5 rounded-md text-[10px] font-bold text-muted-foreground border border-white/10 uppercase tracking-widest hidden sm:block">F</div>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-white/5 rounded-md text-[10px] font-bold text-muted-foreground border border-white/10 uppercase tracking-widest hidden sm:block">↵</div>
             </div>
 
             <div className="flex items-center gap-2">

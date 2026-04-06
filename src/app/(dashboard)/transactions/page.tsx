@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useFinanceStore } from '@/lib/store/useFinanceStore';
 import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useSearchParams } from 'next/navigation';
 import { 
   Plus, 
   Search, 
@@ -61,7 +62,8 @@ export default function TransactionsPage() {
     return formatCurrency(amount * rate, 'EUR');
   };
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const searchParams = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [filterType, setFilterType] = useState<TransactionType | 'All'>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -90,6 +92,10 @@ export default function TransactionsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // For Income: use category as title if title is blank
+    const finalTitle = formData.type === 'Income' && !formData.title
+      ? formData.category
+      : formData.title;
     const finalCategory = formData.category === 'Other' ? (otherLabel || 'Other') : formData.category;
 
     console.log('Final Submission Object:', {
@@ -100,6 +106,7 @@ export default function TransactionsPage() {
 
     await addTransaction({
       ...formData,
+      title: finalTitle,
       category: finalCategory,
       amount: Number(formData.amount),
     });
@@ -153,11 +160,13 @@ export default function TransactionsPage() {
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 pt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Title</Label>
+                    <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+                      Title {formData.type === 'Income' && <span className="normal-case tracking-normal font-normal opacity-60">(optional)</span>}
+                    </Label>
                     <Input 
                       id="title" 
-                      placeholder="e.g., Grocery Shopping" 
-                      required 
+                      placeholder={formData.type === 'Income' ? 'Leave blank to use category' : 'e.g., Grocery Shopping'}
+                      required={formData.type !== 'Income'}
                       className="h-12 bg-[#0C0E0E] border-none rounded-xl"
                       value={formData.title}
                       onChange={e => setFormData(p => ({...p, title: e.target.value}))}
@@ -226,12 +235,19 @@ export default function TransactionsPage() {
                               <SelectItem value="Traveling">Traveling</SelectItem>
                               <SelectItem value="Savings">Savings</SelectItem>
                               <SelectItem value="Entertainment">Entertainment</SelectItem>
+                              <SelectItem value="clothing">Clothing</SelectItem>
+                              <SelectItem value="credit card">Credit Card</SelectItem>
                               <SelectItem value="Other">Other</SelectItem>
                             </>
                           ) : (
                             <>
                               <SelectItem value="Salary">Salary</SelectItem>
-                              <SelectItem value="Investment">Investment</SelectItem>
+                              <SelectItem value="Freelance">Freelance</SelectItem>
+                              <SelectItem value="Business">Business</SelectItem>
+                              <SelectItem value="Investment Returns">Investment Returns</SelectItem>
+                              <SelectItem value="Rental Income">Rental Income</SelectItem>
+                              <SelectItem value="Bonus">Bonus</SelectItem>
+                              <SelectItem value="Gift">Gift</SelectItem>
                               <SelectItem value="Other">Other</SelectItem>
                             </>
                           )}

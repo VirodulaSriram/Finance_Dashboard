@@ -257,25 +257,19 @@ export default function AnalyticsPage() {
                <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/5 bg-white/[0.02]">
-                      <th className="px-4 py-3 text-[9px] font-black uppercase text-muted-foreground tracking-widest">Category</th>
-                      <th className="px-4 py-3 text-[9px] font-black uppercase text-muted-foreground tracking-widest text-right">Volume</th>
+                      <th className="px-4 py-3 text-[9px] font-black uppercase text-muted-foreground tracking-widest w-1/2">Category</th>
+                      <th className="px-4 py-3 text-[9px] font-black uppercase text-muted-foreground tracking-widest text-center">Volume</th>
                       <th className="px-4 py-3 text-[9px] font-black uppercase text-muted-foreground tracking-widest text-right">Amount</th>
-                      <th className="px-4 py-3 text-[9px] font-black uppercase text-muted-foreground tracking-widest text-right">Trend</th>
                     </tr>
                   </thead>
                   <tbody>
                     {analyticsData.topCategories.slice(0, 5).map((cat: any, i: number) => (
                       <tr key={i} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors group/row">
                         <td className="px-4 py-3">
-                           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 text-[9px] font-black rounded-lg truncate max-w-[120px] uppercase tracking-widest px-2 py-0.5">{cat.name}</Badge>
+                           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 text-[9px] font-black rounded-lg truncate max-w-[140px] uppercase tracking-widest px-2 py-0.5">{cat.name}</Badge>
                         </td>
-                        <td className="px-4 py-3 text-xs font-bold text-white group-hover/row:translate-x-1 transition-transform">{cat.count.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-xs font-black text-white text-right">{formatCurrency(cat.total).replace('.00', '')}</td>
-                        <td className="px-4 py-3 text-right">
-                           <div className="flex items-center justify-end gap-1 text-[10px] font-black text-emerald-400">
-                             <TrendingUp className="h-3 w-3" /> {(Math.random() * 5).toFixed(1)}%
-                           </div>
-                        </td>
+                        <td className="px-4 py-3 text-xs font-bold text-white text-center group-hover/row:scale-105 transition-transform">{cat.count.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-xs font-black text-white text-right whitespace-nowrap">{formatCurrency(cat.total).replace('.00', '')}</td>
                       </tr>
                     ))}
                   </tbody>

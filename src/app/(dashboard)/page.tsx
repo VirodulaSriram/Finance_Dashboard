@@ -291,32 +291,8 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Right Section: Quick Action & Goals */}
+      {/* Right Section */}
       <div className="lg:col-span-4 space-y-8">
-        
-        {/* Reset Card */}
-        <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl flex flex-col items-center justify-center text-center">
-          <div className="h-20 w-20 bg-rose-500/10 rounded-full flex items-center justify-center mb-6 border border-rose-500/20">
-             <TrendingUp className="h-10 w-10 text-rose-500 rotate-180" />
-          </div>
-          <h3 className="text-2xl font-black text-white tracking-tight mb-2">Reset Data</h3>
-          <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest mb-8 px-4 opacity-70">Clear all your goals and budgets to start fresh</p>
-          
-          <Button 
-            className="w-full h-14 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-sm shadow-xl shadow-rose-500/20"
-            onClick={async () => {
-              if (confirm('Are you sure you want to reset all goals and budgets? This cannot be undone.')) {
-                await useFinanceStore.getState().resetGoals();
-                await useFinanceStore.getState().resetBudgets();
-                alert('Data has been reset.');
-              }
-            }}
-          >
-            Reset All Now
-          </Button>
-        </Card>
-
-
       </div>
 
     </div>
