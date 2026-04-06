@@ -155,7 +155,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             {isSidebarOpen && (
               <div className="flex flex-col">
-                <span className="font-bold text-xl leading-tight text-white tracking-tight">Finomic</span>
+                <span className="font-bold text-xl leading-tight text-white tracking-tight">FncDashboard</span>
                 <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Financial Assistant</span>
               </div>
             )}
