@@ -39,9 +39,11 @@ const COLORS = [
 
 export default function GoalsPage() {
   const { user } = useAuthStore();
-  const { goals, fetchGoals, addGoal, resetGoals, loading } = useFinanceStore();
+  const { goals, fetchGoals, addGoal, updateGoal, resetGoals, loading } = useFinanceStore();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isBoostOpen, setIsBoostOpen] = useState(false);
+  const [savingAmounts, setSavingAmounts] = useState<Record<string, string>>({});
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [newGoal, setNewGoal] = useState({ 
     title: '', 
     target: '', 
@@ -83,6 +85,19 @@ export default function GoalsPage() {
       priority: 'Medium', 
       color: 'from-blue-500 to-indigo-600' 
     });
+  };
+
+  const handleAddSaving = async (goalId: string, currentAmount: number) => {
+    const amountToAdd = Number(savingAmounts[goalId]);
+    if (!amountToAdd || amountToAdd <= 0) return;
+
+    setIsUpdating(goalId);
+    try {
+      await updateGoal(goalId, { current: currentAmount + amountToAdd });
+      setSavingAmounts(prev => ({ ...prev, [goalId]: '' }));
+    } finally {
+      setIsUpdating(null);
+    }
   };
 
   return (
@@ -265,10 +280,35 @@ export default function GoalsPage() {
                             {isAchieved ? 'Achieved!' : `Due: ${new Date(goal.deadline).toLocaleDateString()}`}
                           </div>
                         </div>
-                        <CardDescription className="flex items-center gap-4 text-md font-medium text-foreground py-1">
-                          <span className="text-2xl font-black">{formatCurrency(goal.current)}</span>
-                          <span className="text-muted-foreground">of</span>
-                          <span className="text-lg font-bold opacity-60">{formatCurrency(goal.target)}</span>
+                        <CardDescription className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-1">
+                          <div className="flex items-center gap-4 text-foreground">
+                            <span className="text-2xl font-black">{formatCurrency(goal.current)}</span>
+                            <span className="text-muted-foreground font-medium">of</span>
+                            <span className="text-lg font-bold opacity-60">{formatCurrency(goal.target)}</span>
+                          </div>
+                          
+                          {!isAchieved && (
+                            <div className="flex items-center gap-2">
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground">{currency}</span>
+                                <Input 
+                                  type="number" 
+                                  placeholder="0.00" 
+                                  className="h-9 w-24 pl-8 text-xs font-bold bg-white/5 border-white/10 rounded-xl"
+                                  value={savingAmounts[goal.id] || ''}
+                                  onChange={(e) => setSavingAmounts({...savingAmounts, [goal.id]: e.target.value})}
+                                />
+                              </div>
+                              <Button 
+                                size="sm" 
+                                className="h-9 w-9 p-0 rounded-xl bg-primary shadow-lg shadow-primary/20"
+                                onClick={() => handleAddSaving(goal.id, goal.current)}
+                                disabled={isUpdating === goal.id || !savingAmounts[goal.id]}
+                              >
+                                {isUpdating === goal.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                              </Button>
+                            </div>
+                          )}
                         </CardDescription>
                       </div>
                     </CardHeader>

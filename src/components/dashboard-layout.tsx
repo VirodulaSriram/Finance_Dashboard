@@ -23,7 +23,9 @@ import {
   Share2,
   Menu as MenuIcon,
   TrendingDown,
-  Shield
+  Shield,
+  PlusCircle,
+  Gem
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -42,6 +44,7 @@ import { Logo } from '@/components/ui/logo';
 import { ThemeToggle } from './theme-toggle';
 import { Input } from './ui/input';
 import { ReportDialog } from './report-dialog';
+import { IncomeModal } from './income-modal';
 
 const sidebarItems = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/' },
@@ -59,6 +62,7 @@ const supportItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout, _hasHydrated, compactMode, accentColor } = useAuthStore();
@@ -155,7 +159,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             {isSidebarOpen && (
               <div className="flex flex-col">
-                <span className="font-bold text-xl leading-tight text-white tracking-tight">FncDashboard</span>
+                <span className="font-bold text-xl leading-tight text-white tracking-tight">FncBoard</span>
                 <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Financial Assistant</span>
               </div>
             )}
@@ -213,6 +217,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             })}
           </div>
           
+          {/* Action Buttons */}
+          <div className="space-y-4 pt-4 border-t border-white/5">
+             <Button
+               onClick={() => setIsIncomeModalOpen(true)}
+               className={cn(
+                 "w-full justify-start gap-4 h-12 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all duration-300 py-6 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white group shadow-lg shadow-emerald-500/5",
+                 !isSidebarOpen && "px-0 justify-center"
+               )}
+             >
+               <PlusCircle className={cn("h-5 w-5 shrink-0 transition-transform", "group-hover:scale-110")} />
+               {isSidebarOpen && <span>Add Income</span>}
+             </Button>
+          </div>
           {/* Activity Chart Section */}
           {isSidebarOpen && (
             <div className="mt-auto mb-4 p-1">
@@ -388,6 +405,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </AnimatePresence>
         </main>
       </div>
+
+      <IncomeModal 
+        isOpen={isIncomeModalOpen} 
+        onClose={() => setIsIncomeModalOpen(false)} 
+      />
     </div>
   );
 }

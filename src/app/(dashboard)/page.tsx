@@ -20,7 +20,8 @@ import {
   CheckCircle2,
   AlertCircle,
   XCircle,
-  Sparkles
+  Sparkles,
+  Target
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -120,7 +121,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
           {/* Overview Widget */}
-          <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative group">
+          <Card className="md:col-span-2 bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative group">
             <div className="flex items-center justify-between mb-6">
               <div className="space-y-1">
                 <h3 className="text-lg font-bold text-white tracking-tight">Financial Trends</h3>
@@ -293,6 +294,65 @@ export default function DashboardPage() {
 
       {/* Right Section */}
       <div className="lg:col-span-4 space-y-8">
+        {/* Income Overview Tile */}
+        <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+            <TrendingUp className="h-24 w-24 text-emerald-400" />
+          </div>
+          
+          <div className="flex items-center justify-between mb-8 relative z-10">
+            <h3 className="text-lg font-bold text-white tracking-tight">Income Summary</h3>
+            <div className="h-10 w-10 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
+              <ArrowUpRight className="h-5 w-5 text-emerald-400" />
+            </div>
+          </div>
+
+          <div className="space-y-6 relative z-10">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 opacity-50">Total Earnings</p>
+              <h2 className="text-4xl font-black text-emerald-400 tracking-tighter">
+                {formatCurrency(totalIncome)}
+              </h2>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-white/5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Growth rate</span>
+                <span className="text-xs font-black text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">+12.5%</span>
+              </div>
+              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 w-[65%] rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+              </div>
+              <p className="text-[9px] text-muted-foreground font-medium">You've reached 65% of your monthly income target.</p>
+            </div>
+
+            <Button 
+              className="w-full mt-4 h-12 bg-white/5 hover:bg-white/10 text-white font-bold text-[10px] uppercase tracking-[0.2em] rounded-2xl border border-white/5 transition-all"
+              onClick={() => {
+                // This could open the IncomeModal if we passed the setter down, 
+                // but for now it's a visual summary.
+              }}
+            >
+              Analyze Sources
+            </Button>
+          </div>
+        </Card>
+
+        {/* Quick Savings Goal Progress - Optional but looks good */}
+        <Card className="bg-primary/5 border border-primary/20 rounded-[2.5rem] p-8 shadow-xl relative overflow-hidden group">
+           <div className="flex flex-col items-center text-center space-y-4">
+              <div className="h-12 w-12 bg-primary/20 rounded-2xl flex items-center justify-center text-primary">
+                <Target className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-white">Savings Progress</h4>
+                <p className="text-[10px] text-muted-foreground font-medium">You are $450 away from your next goal</p>
+              </div>
+              <Button size="sm" className="rounded-xl px-6 bg-primary font-bold text-[10px] uppercase tracking-widest">
+                Boost Now
+              </Button>
+           </div>
+        </Card>
       </div>
 
     </div>

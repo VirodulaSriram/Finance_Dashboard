@@ -32,7 +32,7 @@ export default function InvestmentPage() {
         </h1>
         <p className="max-w-xl mx-auto text-muted-foreground text-sm font-medium leading-relaxed pt-6">
           A new way to grow your wealth. Advanced portfolio tracking, market insights, 
-          and automated investing—built directly into your FncDashboard assistant.
+          and automated investing—built directly into your FncBoard assistant.
         </p>
       </motion.div>
 

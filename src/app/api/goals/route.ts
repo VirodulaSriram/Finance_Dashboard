@@ -30,6 +30,30 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  try {
+    await dbConnect();
+    const userId = req.headers.get('User-Id');
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    if (!id) return NextResponse.json({ error: 'Goal ID required' }, { status: 400 });
+
+    const data = await req.json();
+    const goal = await Goal.findOneAndUpdate(
+      { _id: id, userId: new mongoose.Types.ObjectId(userId) },
+      { $set: data },
+      { new: true }
+    );
+
+    if (!goal) return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
+    return NextResponse.json(goal);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     await dbConnect();

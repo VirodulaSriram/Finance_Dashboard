@@ -30,7 +30,7 @@ const FloatingCard = ({ children, className, delay = 0, duration = 4 }: { childr
 );
 
 const BalanceCard = () => (
-  <FloatingCard className="top-[8%] left-[15%] w-48" delay={0.2}>
+  <FloatingCard className="top-[5%] left-[10%] w-48" delay={0.2}>
     <div className="bg-blue-50 dark:bg-blue-900/20 w-10 h-10 rounded-xl flex items-center justify-center mb-4">
       <CreditCard className="w-5 h-5 text-[#0066FF]" />
     </div>
@@ -40,7 +40,7 @@ const BalanceCard = () => (
 );
 
 const TransactionCard = () => (
-  <FloatingCard className="bottom-[8%] left-[10%] w-56 border-dashed border-2 bg-transparent dark:bg-transparent backdrop-blur-none shadow-none ring-1 ring-inset ring-foreground/5 dark:ring-foreground/10" delay={0.5} duration={5}>
+  <FloatingCard className="bottom-[5%] left-[5%] w-56 border-dashed border-2 bg-transparent dark:bg-transparent backdrop-blur-none shadow-none ring-1 ring-inset ring-foreground/5 dark:ring-foreground/10" delay={0.5} duration={5}>
     <div className="flex flex-col items-center justify-center py-4 bg-white/40 dark:bg-card/20 rounded-xl">
       <div className="bg-[#0066FF] w-10 h-10 rounded-full flex items-center justify-center mb-3 shadow-lg shadow-blue-200 dark:shadow-blue-900/30">
         <Plus className="w-6 h-6 text-white" />
@@ -52,7 +52,7 @@ const TransactionCard = () => (
 );
 
 const SpendingChart = () => (
-  <FloatingCard className="top-[38%] right-[15%] w-44" delay={0.8} duration={4.5}>
+  <FloatingCard className="top-[25%] right-[10%] w-44" delay={0.8} duration={4.5}>
     <div className="relative w-24 h-24 mx-auto mb-2">
       {/* Semi-circular doughnut chart (SVG) */}
       <svg viewBox="0 0 100 100" className="rotate-[-90deg]">

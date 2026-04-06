@@ -22,6 +22,7 @@ interface FinanceState {
 
   fetchGoals: () => Promise<void>;
   addGoal: (goal: Omit<Goal, 'id' | 'userId'>) => Promise<void>;
+  updateGoal: (id: string, goal: Partial<Goal>) => Promise<void>;
   resetGoals: () => Promise<void>;
 }
 
@@ -144,6 +145,22 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         headers: { 'User-Id': userId }
       });
       set((state) => ({ goals: [...state.goals, response.data] }));
+    } catch (error: any) {
+      set({ error: error.response?.data?.error || error.message });
+    }
+  },
+
+  updateGoal: async (id, goal) => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) return;
+
+    try {
+      const response = await axios.patch(`${API_BASE}/goals?id=${id}`, goal, {
+        headers: { 'User-Id': userId }
+      });
+      set((state) => ({
+        goals: state.goals.map((g) => (g.id === id ? response.data : g)),
+      }));
     } catch (error: any) {
       set({ error: error.response?.data?.error || error.message });
     }

@@ -49,7 +49,7 @@
 }
 
 :root {
-  /* FncDashboard Light Palette */
+  /* FncBoard Light Palette */
   --background: oklch(0.98 0.005 264);
   --foreground: oklch(0.15 0.01 264);
 
@@ -59,7 +59,7 @@
   --popover: oklch(0.99 0.005 264);
   --popover-foreground: oklch(0.15 0.01 264);
 
-  /* FncDashboard Aqua/Teal Primary */
+  /* FncBoard Aqua/Teal Primary */
   --primary: oklch(0.65 0.12 180);
   --primary-foreground: oklch(0.99 0 0);
 
@@ -96,7 +96,7 @@
 }
 
 .dark {
-  /* FncDashboard Dark Palette */
+  /* FncBoard Dark Palette */
   --background: oklch(0.12 0.01 264);
   --foreground: oklch(0.95 0.01 264);
 
