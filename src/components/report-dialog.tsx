@@ -60,9 +60,10 @@ function CustomSwitch({ checked, onCheckedChange, disabled }: { checked: boolean
 
 export function ReportDialog({ trigger }: { trigger: React.ReactNode }) {
   const { user, token, updateUser } = useAuthStore();
-  const [loadingType, setLoadingType] = useState<'pdf' | 'excel' | 'sharing' | null>(null);
+  const [loadingType, setLoadingType] = useState<'download' | 'email' | 'sharing' | null>(null);
   const [copied, setCopied] = useState(false);
   const [isSharing, setIsSharing] = useState(user?.isSharing || false);
+  const [selectedFormat, setSelectedFormat] = useState<'pdf' | 'excel'>('pdf');
   const [toastMsg, setToastMsg] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
 
   const now = new Date();
@@ -92,24 +93,34 @@ export function ReportDialog({ trigger }: { trigger: React.ReactNode }) {
     return data;
   };
 
-  const handleDownload = async (type: 'pdf' | 'excel') => {
-    setLoadingType(type);
+  const handleExecuteAction = async (action: 'download' | 'email') => {
+    setLoadingType(action);
+    const type = selectedFormat;
     try {
       const transactions = await fetchTransactions();
       const dateRangeStr = `${new Date(fromDate).toLocaleDateString('en-GB')} to ${new Date(toDate).toLocaleDateString('en-GB')}`;
       const userData = { username: user?.username || 'User', email: user?.email || '', currencyCode: user?.currencyCode || 'USD' };
 
-      // Email delivery
-      await fetch('/api/reports/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transactions, user: userData, dateRange: dateRangeStr, format: type })
-      });
-
-      showToast(`${type.toUpperCase()} Report Sent to Email`, 'success');
+      if (action === 'download') {
+        if (type === 'pdf') {
+          const doc = generateCustomReport(transactions, userData, dateRangeStr);
+          doc.save(`FncBoard_Statement_${fromDate}_to_${toDate}.pdf`);
+        } else {
+          const wb = generateExcelWorkbook(transactions, userData, dateRangeStr);
+          XLSX.writeFile(wb, `FncBoard_Statement_${fromDate}_to_${toDate}.xlsx`);
+        }
+        showToast(`${type.toUpperCase()} Report Downloaded`, 'success');
+      } else {
+        await fetch('/api/reports/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transactions, user: userData, dateRange: dateRangeStr, format: type })
+        });
+        showToast(`${type.toUpperCase()} Report Sent to Email`, 'success');
+      }
     } catch (err: any) {
-      console.error('Report Generation Error:', err);
-      showToast(`Failed to process ${type.toUpperCase()} report`, 'error');
+      console.error(`Report ${action} Error:`, err);
+      showToast(`Failed to ${action} ${type.toUpperCase()} report`, 'error');
     } finally {
       setLoadingType(null);
     }
@@ -154,9 +165,10 @@ export function ReportDialog({ trigger }: { trigger: React.ReactNode }) {
       <DialogTrigger>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[540px] rounded-3xl bg-[#0C0E0E] border-white/5 p-10 overflow-hidden shadow-2xl ring-1 ring-white/10">
-        <DialogHeader className="mb-8">
-          <DialogTitle className="text-3xl font-bold text-white mb-2">
+      <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto rounded-3xl bg-card border border-border p-0 overflow-hidden shadow-2xl ring-1 ring-border/50 custom-scrollbar">
+        <div className="p-10 space-y-8">
+        <DialogHeader className="mb-0">
+          <DialogTitle className="text-3xl font-bold text-foreground mb-2">
              Custom Statement
           </DialogTitle>
           <p className="text-sm text-muted-foreground leading-relaxed">
@@ -169,63 +181,91 @@ export function ReportDialog({ trigger }: { trigger: React.ReactNode }) {
              <div className="space-y-2.5">
                 <Label className="text-xs font-semibold text-muted-foreground ml-1 uppercase tracking-wider">From Date</Label>
                 <div className="relative group">
-                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-primary transition-colors" />
-                   <Input 
-                      type="date" 
-                      value={fromDate}
-                      onChange={(e) => setFromDate(e.target.value)}
-                      className="h-11 bg-white/5 border-white/10 rounded-xl pl-10 pr-4 text-sm text-white focus:ring-1 focus:ring-primary/40 transition-all"
-                   />
-                </div>
-             </div>
-             <div className="space-y-2.5">
-                <Label className="text-xs font-semibold text-muted-foreground ml-1 uppercase tracking-wider">To Date</Label>
-                <div className="relative group">
-                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-primary transition-colors" />
-                   <Input 
-                      type="date" 
-                      value={toDate}
-                      onChange={(e) => setToDate(e.target.value)}
-                      className="h-11 bg-white/5 border-white/10 rounded-xl pl-10 pr-4 text-sm text-white focus:ring-1 focus:ring-primary/40 transition-all"
-                   />
-                </div>
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input 
+                       type="date" 
+                       value={fromDate}
+                       onChange={(e) => setFromDate(e.target.value)}
+                       className="h-11 bg-background border-border rounded-xl pl-10 pr-4 text-sm text-foreground focus:ring-1 focus:ring-primary/40 transition-all"
+                    />
+                 </div>
+              </div>
+              <div className="space-y-2.5">
+                 <Label className="text-xs font-semibold text-muted-foreground ml-1 uppercase tracking-wider">To Date</Label>
+                 <div className="relative group">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input 
+                       type="date" 
+                       value={toDate}
+                       onChange={(e) => setToDate(e.target.value)}
+                       className="h-11 bg-background border-border rounded-xl pl-10 pr-4 text-sm text-foreground focus:ring-1 focus:ring-primary/40 transition-all"
+                    />
+                 </div>
+              </div>
+          </div>
+
+          <div className="space-y-4">
+             <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Select Export Format</Label>
+             <div className="grid grid-cols-2 gap-3 p-1 bg-muted rounded-2xl border border-border">
+                <Button 
+                   variant="ghost" 
+                   onClick={() => setSelectedFormat('pdf')}
+                   className={cn(
+                     "h-12 rounded-xl transition-all gap-2 text-xs font-bold",
+                     selectedFormat === 'pdf' ? "bg-card text-foreground shadow-sm" : "hover:bg-card/50 text-muted-foreground"
+                   )}
+                >
+                   <FileText className={cn("h-4 w-4", selectedFormat === 'pdf' ? "text-primary" : "text-muted-foreground")} />
+                   PDF Document
+                </Button>
+                <Button 
+                   variant="ghost" 
+                   onClick={() => setSelectedFormat('excel')}
+                   className={cn(
+                     "h-12 rounded-xl transition-all gap-2 text-xs font-bold",
+                     selectedFormat === 'excel' ? "bg-card text-foreground shadow-sm" : "hover:bg-card/50 text-muted-foreground"
+                   )}
+                >
+                   <TableIcon className={cn("h-4 w-4", selectedFormat === 'excel' ? "text-emerald-500" : "text-muted-foreground")} />
+                   Excel Sheet
+                </Button>
              </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-4">
              <Button 
-               onClick={() => handleDownload('pdf')} 
+               onClick={() => handleExecuteAction('download')} 
                disabled={!!loadingType}
-               className="h-14 bg-white text-black hover:bg-white/90 font-bold rounded-xl flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+               className="h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-black rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
              >
-                {loadingType === 'pdf' ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileText className="h-5 w-5" />}
-                Email PDF
+                {loadingType === 'download' ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
+                Download Now
              </Button>
              
              <Button 
-               onClick={() => handleDownload('excel')} 
+               onClick={() => handleExecuteAction('email')} 
                disabled={!!loadingType}
-               className="h-14 bg-white/5 border border-white/10 text-white hover:bg-white/10 font-bold rounded-xl flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+               className="h-14 bg-background border border-border text-foreground hover:bg-muted font-black rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
              >
-                {loadingType === 'excel' ? <Loader2 className="h-5 w-5 animate-spin" /> : <TableIcon className="h-5 w-5 text-emerald-400" />}
-                Email Excel
+                {loadingType === 'email' ? <Loader2 className="h-5 w-5 animate-spin" /> : <Share2 className="h-5 w-5" />}
+                Email Report
              </Button>
           </div>
 
-          <div className="h-px bg-white/5 w-full" />
+          <div className="h-px bg-border/50 w-full" />
 
-          <div className="p-6 bg-white/[0.02] border border-white/5 rounded-[2rem] space-y-5 shadow-inner">
-             <div className="flex items-center justify-between">
+          <div className="p-6 bg-muted/30 border border-border rounded-[2.5rem] space-y-6 shadow-sm overflow-hidden relative">
+             <div className="flex items-center justify-between relative z-10">
                 <div className="flex items-center gap-4">
                    <div className={cn(
-                     "h-12 w-12 rounded-xl flex items-center justify-center transition-all",
-                     isSharing ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-white/5 text-white/20 border border-white/5"
+                      "h-12 w-12 rounded-2xl flex items-center justify-center transition-all shadow-sm",
+                      isSharing ? "bg-emerald-500 text-white" : "bg-background text-muted-foreground border border-border"
                    )}>
                       {isSharing ? <Globe className="h-6 w-6" /> : <Lock className="h-6 w-6" />}
                    </div>
                    <div className="space-y-0.5">
-                      <h4 className="font-bold text-white text-base">Public Dashboard</h4>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black opacity-40">Live Sync Link</p>
+                      <h4 className="font-bold text-foreground text-base">Public Dashboard</h4>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black opacity-60">Real-time Sharing</p>
                    </div>
                 </div>
                 <CustomSwitch 
@@ -236,8 +276,8 @@ export function ReportDialog({ trigger }: { trigger: React.ReactNode }) {
              </div>
 
              {isSharing && (
-               <div className="flex items-center gap-2 bg-[#0C0E0E] border border-white/5 p-1.5 px-4 rounded-2xl overflow-hidden group shadow-inner">
-                  <span className="flex-1 text-[11px] text-white/40 truncate py-2 font-medium">
+               <div className="flex items-center gap-2 bg-background border border-border p-2 px-4 rounded-2xl overflow-hidden group shadow-inner relative z-10 animate-in slide-in-from-top-4 duration-300">
+                  <span className="flex-1 text-[11px] text-foreground/70 truncate py-2 font-semibold">
                      {shareLink}
                   </span>
                   <div className="flex items-center gap-1">
@@ -245,7 +285,7 @@ export function ReportDialog({ trigger }: { trigger: React.ReactNode }) {
                         variant="ghost" 
                         size="icon" 
                         onClick={copyToClipboard}
-                        className="h-9 w-9 hover:bg-white/5 text-white/60 rounded-xl"
+                        className="h-10 w-10 hover:bg-muted text-muted-foreground hover:text-primary rounded-xl transition-all"
                      >
                         {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
                      </Button>
@@ -253,7 +293,7 @@ export function ReportDialog({ trigger }: { trigger: React.ReactNode }) {
                         <Button 
                            variant="ghost" 
                            size="icon" 
-                           className="h-9 w-9 hover:bg-white/5 text-white/60 rounded-xl"
+                           className="h-10 w-10 hover:bg-muted text-muted-foreground hover:text-primary rounded-xl transition-all"
                         >
                            <ExternalLink className="h-4 w-4" />
                         </Button>
@@ -261,6 +301,7 @@ export function ReportDialog({ trigger }: { trigger: React.ReactNode }) {
                   </div>
                </div>
              )}
+          </div>
           </div>
         </div>
 

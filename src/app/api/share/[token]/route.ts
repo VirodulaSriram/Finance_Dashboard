@@ -11,7 +11,11 @@ export async function GET(
     const { token } = await params;
     
     await dbConnect();
-    const user = await User.findOne({ shareToken: token, isSharing: true });
+    const user = await User.findOneAndUpdate(
+      { shareToken: token, isSharing: true },
+      { $inc: { views: 1 } },
+      { new: true }
+    );
 
     if (!user) {
       return NextResponse.json({ error: "Shared dashboard not found or disabled" }, { status: 404 });

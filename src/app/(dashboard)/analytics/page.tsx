@@ -100,7 +100,7 @@ export default function AnalyticsPage() {
         }
         acc[t.category].total += t.amount;
         acc[t.category].count += 1;
-        const txDate = typeof t.date === 'string' ? t.date.split('T')[0] : t.date.toISOString().split('T')[0];
+        const txDate = typeof t.date === 'string' ? t.date.split('T')[0] : (t.date as Date).toISOString().split('T')[0];
         const historyItem = acc[t.category].history.find((h: any) => h.date === txDate);
         if (historyItem) historyItem.value += t.amount;
         return acc;
@@ -113,7 +113,7 @@ export default function AnalyticsPage() {
     // 3. Trends (Daily Cash Flow)
     const dailyTrends = last7Days.map(date => {
       const dayTxs = transactions.filter(t => {
-        const txDate = typeof t.date === 'string' ? t.date : t.date.toISOString();
+        const txDate = typeof t.date === 'string' ? t.date : (t.date as Date).toISOString();
         return txDate.split('T')[0] === date;
       });
       return {
@@ -150,10 +150,10 @@ export default function AnalyticsPage() {
   if (!analyticsData) {
      return (
        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
-          <div className="h-24 w-24 bg-white/5 rounded-[2.5rem] flex items-center justify-center border border-white/5">
+          <div className="h-24 w-24 bg-muted rounded-[2.5rem] flex items-center justify-center border border-border/50">
              <BarChart3 className="h-10 w-10 text-muted-foreground opacity-30" />
           </div>
-          <h2 className="text-2xl font-black text-white tracking-tight">No Transactions Found</h2>
+          <h2 className="text-2xl font-black text-foreground tracking-tight">No Transactions Found</h2>
           <p className="max-w-xs text-muted-foreground text-sm font-medium">Add some transactions to see your deep analytics and AI-powered insights.</p>
        </div>
      );
@@ -163,16 +163,16 @@ export default function AnalyticsPage() {
     <div className="flex flex-col space-y-8 pb-12">
       
       {/* Top Header Section: Position Tracking Style */}
-      <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative group">
+      <Card className="bg-card border border-border/40 rounded-[2.5rem] p-8 card-shadow-md overflow-hidden relative group fluid-hover">
         <div className="flex items-center justify-between mb-8 relative z-10">
-           <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+           <h3 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
              <div className="p-2 bg-primary/20 rounded-xl">
                <Activity className="h-5 w-5 text-primary" />
              </div>
              Financial Health Tracking
            </h3>
            <div className="flex items-center gap-2">
-             <Button variant="ghost" size="sm" className="bg-white/5 border border-white/5 rounded-full text-[10px] font-black uppercase tracking-widest text-muted-foreground gap-2 hover:text-white">
+             <Button variant="outline" size="sm" className="bg-muted border-border rounded-full text-[10px] font-black uppercase tracking-widest text-muted-foreground gap-2 hover:text-foreground">
                Last 30 days <ChevronDown className="h-3 w-3" />
              </Button>
            </div>
@@ -196,7 +196,7 @@ export default function AnalyticsPage() {
                   endAngle={0}
                 >
                   <RadialBar 
-                    background 
+                    background={{ fill: 'hsl(var(--muted))' }} 
                     dataKey="value" 
                     fill="#34d399" 
                     cornerRadius={12}
@@ -204,18 +204,18 @@ export default function AnalyticsPage() {
                 </RadialBarChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-end pb-8">
-                <span className="text-4xl font-black text-white">{analyticsData.healthScore.toFixed(0)}%</span>
+                <span className="text-4xl font-black text-foreground">{analyticsData.healthScore.toFixed(0)}%</span>
               </div>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between text-[10px] font-bold">
                 <span className="flex items-center gap-2 text-muted-foreground"><div className="h-2 w-2 rounded-full bg-emerald-400" /> Your health</span>
-                <span className="text-white">{analyticsData.healthScore.toFixed(0)}%</span>
+                <span className="text-foreground">{analyticsData.healthScore.toFixed(0)}%</span>
               </div>
               <div className="flex items-center justify-between text-[10px] font-bold">
                 <span className="flex items-center gap-2 text-muted-foreground"><div className="h-2 w-2 rounded-full bg-rose-400" /> Target health</span>
-                <span className="text-white">92%</span>
+                <span className="text-foreground">92%</span>
               </div>
             </div>
           </div>
@@ -230,18 +230,18 @@ export default function AnalyticsPage() {
                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-50">Top {i + 1 === 1 ? '3' : i + 1 === 2 ? '10' : i + 1 === 3 ? '20' : '100'}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                       <div className="h-8 w-8 rounded-full border border-white/10 flex items-center justify-center text-white">
+                       <div className="h-8 w-8 rounded-full border border-border flex items-center justify-center text-foreground shadow-sm">
                           <Eye className="h-4 w-4 opacity-50" />
                        </div>
                        <div className="flex flex-col">
-                          <span className="text-lg font-black text-white leading-none mb-1">{formatCurrency(cat.total).replace('.00', '').replace('$', '').trim()}</span>
-                          <span className="text-[10px] font-bold text-emerald-400">+{cat.count} tx</span>
+                          <span className="text-lg font-black text-foreground leading-none mb-1">{formatCurrency(cat.total).replace('.00', '').replace('$', '').trim()}</span>
+                          <span className="text-[10px] font-bold text-emerald-500">+{cat.count} tx</span>
                        </div>
                     </div>
                     <div className="h-10 w-full opacity-60">
                        <ResponsiveContainer width="100%" height="100%">
                          <LineChart data={cat.history}>
-                            <Line type="monotone" dataKey="value" stroke="#34d399" strokeWidth={2} dot={false} />
+                            <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
                          </LineChart>
                        </ResponsiveContainer>
                     </div>
@@ -253,10 +253,10 @@ export default function AnalyticsPage() {
           {/* Top Keywords Table */}
           <div className="lg:col-span-5 space-y-6 pt-2">
             <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Significant Spending Items</div>
-            <div className="bg-white/[0.02] border border-white/5 rounded-lg overflow-hidden">
+            <div className="bg-muted/10 border border-border/50 rounded-2xl overflow-hidden shadow-sm backdrop-blur-sm">
                <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/5 bg-white/[0.02]">
+                    <tr className="border-b border-border bg-muted/20">
                       <th className="px-4 py-3 text-[9px] font-black uppercase text-muted-foreground tracking-widest w-1/2">Category</th>
                       <th className="px-4 py-3 text-[9px] font-black uppercase text-muted-foreground tracking-widest text-center">Volume</th>
                       <th className="px-4 py-3 text-[9px] font-black uppercase text-muted-foreground tracking-widest text-right">Amount</th>
@@ -264,12 +264,12 @@ export default function AnalyticsPage() {
                   </thead>
                   <tbody>
                     {analyticsData.topCategories.slice(0, 5).map((cat: any, i: number) => (
-                      <tr key={i} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors group/row">
+                      <tr key={i} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors group/row">
                         <td className="px-4 py-3">
-                           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 text-[9px] font-black rounded-lg truncate max-w-[140px] uppercase tracking-widest px-2 py-0.5">{cat.name}</Badge>
+                           <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black rounded-lg truncate max-w-[140px] uppercase tracking-widest px-2 py-0.5 shadow-sm">{cat.name}</Badge>
                         </td>
-                        <td className="px-4 py-3 text-xs font-bold text-white text-center group-hover/row:scale-105 transition-transform">{cat.count.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-xs font-black text-white text-right whitespace-nowrap">{formatCurrency(cat.total).replace('.00', '')}</td>
+                        <td className="px-4 py-3 text-xs font-bold text-foreground text-center group-hover/row:scale-105 transition-transform">{cat.count.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-xs font-black text-foreground text-right whitespace-nowrap">{formatCurrency(cat.total).replace('.00', '')}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -283,45 +283,45 @@ export default function AnalyticsPage() {
         
         {/* User Overview Section: Bottom Left style */}
         <div className="lg:col-span-4 space-y-8 flex flex-col">
-          <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl flex-1 flex flex-col group relative overflow-hidden">
+          <Card className="bg-card border border-border/40 rounded-[2.5rem] p-8 card-shadow-md flex-1 flex flex-col group relative overflow-hidden fluid-hover">
             <div className="absolute top-0 right-0 p-8">
                <MoreHorizontal className="h-5 w-5 text-muted-foreground opacity-30 group-hover:opacity-100 transition-opacity cursor-pointer" />
             </div>
             
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-lg font-bold text-white tracking-tight">User Overview</h3>
+              <h3 className="text-lg font-bold text-foreground tracking-tight">User Overview</h3>
               <div className="flex items-center gap-4 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
                 <span className="flex items-center gap-1.5"><div className="h-1 w-1 rounded-full bg-primary" /> Active</span>
-                <span className="flex items-center gap-1.5"><div className="h-1 w-1 rounded-full bg-emerald-400/50" /> 7-Day</span>
+                <span className="flex items-center gap-1.5"><div className="h-1 w-1 rounded-full bg-emerald-500" /> 7-Day</span>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2 mb-10">
               <div className="space-y-4 flex flex-col items-center">
-                 <div className="h-14 w-14 rounded-full border-[6px] border-primary/20 border-t-primary relative flex items-center justify-center">
+                 <div className="h-14 w-14 rounded-full border-[6px] border-primary/20 border-t-primary relative flex items-center justify-center shadow-inner">
                     <Zap className="h-4 w-4 text-primary absolute opacity-40" />
                  </div>
                  <div className="text-center">
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-40">DR</span>
-                    <p className="text-sm font-black text-white mt-1">87 <span className="text-[8px] text-emerald-400 font-bold ml-0.5">+4.1K</span></p>
+                    <p className="text-sm font-black text-foreground mt-1">87 <span className="text-[8px] text-emerald-500 font-bold ml-0.5">+4.1K</span></p>
                  </div>
               </div>
               <div className="space-y-4 flex flex-col items-center">
-                 <div className="h-14 w-14 rounded-full border-[6px] border-emerald-400/10 border-t-emerald-400 relative flex items-center justify-center">
-                    <Activity className="h-4 w-4 text-emerald-400 absolute opacity-40" />
+                 <div className="h-14 w-14 rounded-full border-[6px] border-emerald-500/20 border-t-emerald-500 relative flex items-center justify-center shadow-inner">
+                    <Activity className="h-4 w-4 text-emerald-500 absolute opacity-40" />
                  </div>
                  <div className="text-center">
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-40">UR</span>
-                    <p className="text-sm font-black text-white mt-1">55 <span className="text-[8px] text-emerald-400 font-bold ml-0.5">+3.4K</span></p>
+                    <p className="text-sm font-black text-foreground mt-1">55 <span className="text-[8px] text-emerald-500 font-bold ml-0.5">+3.4K</span></p>
                  </div>
               </div>
               <div className="space-y-4 flex flex-col items-center">
-                 <div className="h-14 w-14 rounded-full border-[6px] border-rose-400/5 border-t-rose-400 relative flex items-center justify-center">
-                    <Target className="h-4 w-4 text-rose-400 absolute opacity-40" />
+                 <div className="h-14 w-14 rounded-full border-[6px] border-rose-500/10 border-t-rose-500 relative flex items-center justify-center shadow-inner">
+                    <Target className="h-4 w-4 text-rose-500 absolute opacity-40" />
                  </div>
                  <div className="text-center">
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-40">AR</span>
-                    <p className="text-sm font-black text-white mt-1">55 <span className="text-[8px] text-rose-400 font-bold ml-0.5">-2.4K</span></p>
+                    <p className="text-sm font-black text-foreground mt-1">55 <span className="text-[8px] text-rose-500 font-bold ml-0.5">-2.4K</span></p>
                  </div>
               </div>
             </div>
@@ -331,16 +331,16 @@ export default function AnalyticsPage() {
                   <AreaChart data={analyticsData.dailyTrends} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="userColorIncome" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#34d399" stopOpacity={0.2}/>
-                        <stop offset="95%" stopColor="#34d399" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                       </linearGradient>
                       <linearGradient id="userColorTrend" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="hsl(var(--secondary))" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="hsl(var(--secondary))" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <Area type="monotone" dataKey="income" stroke="#34d399" strokeWidth={3} fillOpacity={1} fill="url(#userColorIncome)" />
-                    <Area type="monotone" dataKey="expense" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#userColorTrend)" />
+                    <Area type="monotone" dataKey="income" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#userColorIncome)" />
+                    <Area type="monotone" dataKey="expense" stroke="hsl(var(--secondary))" strokeWidth={2} fillOpacity={1} fill="url(#userColorTrend)" />
                   </AreaChart>
                </ResponsiveContainer>
             </div>
@@ -354,9 +354,9 @@ export default function AnalyticsPage() {
 
         {/* Sessions & Engagement Section: Bottom Right style */}
         <div className="lg:col-span-8 space-y-8 flex flex-col">
-          <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 shadow-2xl relative group overflow-hidden flex-1 flex flex-col">
+          <Card className="bg-card border border-border/40 rounded-[2.5rem] p-8 card-shadow-md relative group overflow-hidden flex-1 flex flex-col fluid-hover">
              <div className="flex items-center justify-between mb-8 relative z-10">
-               <h3 className="text-lg font-bold text-white tracking-tight">Sessions & Engagement</h3>
+               <h3 className="text-lg font-bold text-foreground tracking-tight">Sessions & Engagement</h3>
                <Button 
                 variant="link" 
                 onClick={() => setReportModalOpen(true)}
@@ -366,40 +366,40 @@ export default function AnalyticsPage() {
                </Button>
              </div>
 
-             <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-10 relative z-10 border-b border-white/5 pb-10">
+             <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-10 relative z-10 border-b border-border pb-10">
                 <div className="space-y-2">
                    <div className="flex items-center gap-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em]">Visits <HelpCircle className="h-2.5 w-2.5 opacity-20" /></div>
                    <div className="flex items-end gap-2">
-                      <span className="text-2xl font-black text-white">{analyticsData.txCount.toLocaleString()}</span>
-                      <span className="text-[10px] font-black text-emerald-400 mb-1 leading-none">+10.32%</span>
+                      <span className="text-2xl font-black text-foreground">{analyticsData.txCount.toLocaleString()}</span>
+                      <span className="text-[10px] font-black text-emerald-500 mb-1 leading-none">+10.32%</span>
                    </div>
                 </div>
                 <div className="space-y-2">
                    <div className="flex items-center gap-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em]">Unique <HelpCircle className="h-2.5 w-2.5 opacity-20" /></div>
                    <div className="flex items-end gap-2">
-                      <span className="text-2xl font-black text-white">{(analyticsData.txCount * 0.7).toFixed(0)}</span>
-                      <span className="text-[10px] font-black text-rose-400 mb-1 leading-none">-4.8%</span>
+                      <span className="text-2xl font-black text-foreground">{(analyticsData.txCount * 0.7).toFixed(0)}</span>
+                      <span className="text-[10px] font-black text-rose-500 mb-1 leading-none">-4.8%</span>
                    </div>
                 </div>
                 <div className="space-y-2">
                    <div className="flex items-center gap-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em]">Pages/Visit <HelpCircle className="h-2.5 w-2.5 opacity-20" /></div>
                    <div className="flex items-end gap-2">
-                      <span className="text-2xl font-black text-white">4.12</span>
-                      <span className="text-[10px] font-black text-rose-400 mb-1 leading-none">-11.8%</span>
+                      <span className="text-2xl font-black text-foreground">4.12</span>
+                      <span className="text-[10px] font-black text-rose-500 mb-1 leading-none">-11.8%</span>
                    </div>
                 </div>
                 <div className="space-y-2">
                    <div className="flex items-center gap-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em]">Avg. Duration <HelpCircle className="h-2.5 w-2.5 opacity-20" /></div>
                    <div className="flex items-end gap-2">
-                      <span className="text-2xl font-black text-white">04:03</span>
-                      <span className="text-[10px] font-black text-emerald-400 mb-1 leading-none">+1.32%</span>
+                      <span className="text-2xl font-black text-foreground">04:03</span>
+                      <span className="text-[10px] font-black text-emerald-500 mb-1 leading-none">+1.32%</span>
                    </div>
                 </div>
                 <div className="space-y-2">
                    <div className="flex items-center gap-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em]">Traffic Rank <HelpCircle className="h-2.5 w-2.5 opacity-20" /></div>
                    <div className="flex items-end gap-2">
-                      <span className="text-2xl font-black text-white">1,128</span>
-                      <span className="text-[10px] font-black text-emerald-400 mb-1 leading-none">+3.21%</span>
+                      <span className="text-2xl font-black text-foreground">1,128</span>
+                      <span className="text-[10px] font-black text-emerald-500 mb-1 leading-none">+3.21%</span>
                    </div>
                 </div>
              </div>
@@ -407,43 +407,43 @@ export default function AnalyticsPage() {
              <div className="h-[300px] w-full mt-auto relative z-10">
                 <ResponsiveContainer width="100%" height="100%">
                    <LineChart data={analyticsData.dailyTrends} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                       <XAxis 
                         dataKey="date" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fontSize: 9, fontWeight: 900, fill: 'rgba(255,255,255,0.2)' }} 
+                        tick={{ fontSize: 9, fontWeight: 900, fill: 'hsl(var(--muted-foreground))' }} 
                       />
                       <YAxis 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fontSize: 9, fontWeight: 900, fill: 'rgba(255,255,255,0.2)' }} 
+                        tick={{ fontSize: 9, fontWeight: 900, fill: 'hsl(var(--muted-foreground))' }} 
                         hide
                       />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: '#0C0E0E', 
-                          border: '1px solid rgba(255,255,255,0.1)',
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
                           borderRadius: '20px',
                           fontSize: '11px',
                           fontWeight: 900,
-                          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 1)',
+                          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.2)',
                           padding: '16px'
                         }}
-                        cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }}
+                        cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 2 }}
                       />
                       <Line 
                         type="monotone" 
                         dataKey="income" 
-                        stroke="#34d399" 
+                        stroke="hsl(var(--primary))" 
                         strokeWidth={4} 
                         dot={{ r: 0 }} 
-                        activeDot={{ r: 6, strokeWidth: 4, stroke: '#161818', fill: '#34d399' }} 
+                        activeDot={{ r: 6, strokeWidth: 4, stroke: 'hsl(var(--card))', fill: 'hsl(var(--primary))' }} 
                       />
                       <Line 
                         type="monotone" 
                         dataKey="count" 
-                        stroke="#6366f1" 
+                        stroke="hsl(var(--secondary))" 
                         strokeWidth={2} 
                         dot={{ r: 0 }} 
                         strokeDasharray="4 4"

@@ -27,8 +27,8 @@ export default function InvestmentPage() {
         <Badge className="bg-primary/20 text-primary border-primary/20 px-4 py-1 rounded-full text-xs font-black uppercase tracking-[0.2em] mb-4">
           <Sparkles className="h-3 w-3 mr-2" /> Release 2.0
         </Badge>
-        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none">
-          Investments <br/> <span className="text-muted-foreground opacity-50 underline decoration-primary decoration-4 underline-offset-8">Coming Soon</span>
+        <h1 className="text-5xl md:text-7xl font-black text-foreground tracking-tighter leading-none">
+          Investments <br/> <span className="text-muted-foreground/40 underline decoration-primary decoration-4 underline-offset-8">Coming Soon</span>
         </h1>
         <p className="max-w-xl mx-auto text-muted-foreground text-sm font-medium leading-relaxed pt-6">
           A new way to grow your wealth. Advanced portfolio tracking, market insights, 
@@ -50,14 +50,14 @@ export default function InvestmentPage() {
             transition={{ delay: 0.1 * i }}
             className="group"
           >
-            <Card className="bg-[#161818] border-none rounded-[2.5rem] p-8 h-full shadow-2xl relative overflow-hidden transition-all hover:-translate-y-2">
+            <Card className="bg-card border border-border/40 rounded-[2.5rem] p-8 h-full card-shadow-md relative overflow-hidden transition-all hover:-translate-y-2 fluid-hover">
               <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                 <ArrowRight className="h-5 w-5 text-muted-foreground" />
               </div>
-              <div className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-6 bg-white/5 border border-white/5 ${feature.color}`}>
+              <div className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-6 bg-background border border-border/20 ${feature.color} shadow-sm`}>
                 <feature.icon className="h-7 w-7" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">{feature.label}</h3>
+              <h3 className="text-lg font-bold text-foreground mb-2">{feature.label}</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">{feature.desc}</p>
             </Card>
           </motion.div>
@@ -70,7 +70,7 @@ export default function InvestmentPage() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.5 }}
       >
-        <Button className="h-14 px-10 rounded-2xl bg-primary text-[#0C0E0E] font-black text-base shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+        <Button className="h-14 px-10 rounded-2xl bg-primary text-primary-foreground font-black text-base shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all fluid-hover">
           Notify Me When Available
         </Button>
         <p className="text-[10px] text-center text-muted-foreground mt-4 font-black uppercase tracking-widest opacity-40 flex items-center justify-center gap-2">

@@ -37,6 +37,7 @@ interface AdminUser {
   role: 'Admin' | 'Viewer';
   country?: string;
   currencyCode: string;
+  views: number;
   createdAt: string;
 }
 
@@ -106,17 +107,17 @@ export default function AdminPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-primary/10 rounded-2xl flex items-center justify-center">
+            <div className="h-10 w-10 bg-primary/20 rounded-2xl flex items-center justify-center shadow-sm">
               <Shield className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="text-4xl font-black text-white tracking-tighter italic">Admin Console</h2>
+            <h2 className="text-4xl font-black text-foreground tracking-tighter italic">Admin Console</h2>
           </div>
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Manage users, roles and platform access</p>
         </div>
         <Button
-          variant="ghost"
+          variant="outline"
           onClick={fetchUsers}
-          className="gap-2 h-11 px-6 bg-white/5 hover:bg-white/10 text-white rounded-2xl"
+          className="gap-2 h-11 px-6 bg-background border border-border hover:bg-muted text-foreground rounded-2xl transition-all"
           disabled={loading}
         >
           <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
@@ -125,19 +126,20 @@ export default function AdminPage() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Users', value: users.length, icon: Users, color: 'text-primary bg-primary/10' },
           { label: 'Admins', value: totalAdmins, icon: Crown, color: 'text-amber-400 bg-amber-400/10' },
           { label: 'Viewers', value: totalViewers, icon: Eye, color: 'text-blue-400 bg-blue-400/10' },
+          { label: 'Total Views', value: users.reduce((acc, u) => acc + (u.views || 0), 0), icon: Activity, color: 'text-emerald-400 bg-emerald-400/10' },
         ].map((stat) => (
-          <Card key={stat.label} className="bg-[#161818] border-none rounded-3xl p-6 shadow-xl">
+          <Card key={stat.label} className="bg-card border border-border/40 rounded-3xl p-6 card-shadow-md fluid-hover group">
             <CardContent className="p-0 flex items-center gap-4">
-              <div className={cn('h-12 w-12 rounded-2xl flex items-center justify-center shrink-0', stat.color)}>
+              <div className={cn('h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110', stat.color)}>
                 <stat.icon className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-2xl font-black text-white">{stat.value}</p>
+                <p className="text-2xl font-black text-foreground">{stat.value}</p>
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{stat.label}</p>
               </div>
             </CardContent>
@@ -146,18 +148,19 @@ export default function AdminPage() {
       </div>
 
       {/* User Table */}
-      <Card className="bg-[#161818] border-none rounded-[2.5rem] shadow-2xl overflow-hidden">
+      <Card className="bg-card border border-border/40 rounded-[2.5rem] card-shadow-md overflow-hidden">
         <CardHeader className="px-8 pt-8 pb-4">
-          <CardTitle className="text-white font-black text-xl">Registered Users</CardTitle>
+          <CardTitle className="text-foreground font-black text-xl">Registered Users</CardTitle>
           <CardDescription>Manage roles and access for all platform users.</CardDescription>
         </CardHeader>
         <div className="overflow-x-auto">
           <div className="min-w-[700px] px-8 pb-8">
             {/* Table header */}
-            <div className="grid grid-cols-12 gap-4 pb-3 border-b border-white/5 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              <div className="col-span-4">User</div>
+            <div className="grid grid-cols-12 gap-4 pb-3 border-b border-border text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <div className="col-span-3">User</div>
               <div className="col-span-3">Email</div>
               <div className="col-span-2 text-center">Role</div>
+              <div className="col-span-1 text-center">Views</div>
               <div className="col-span-1 text-center">Currency</div>
               <div className="col-span-2 text-right">Actions</div>
             </div>
@@ -176,15 +179,15 @@ export default function AdminPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.98 }}
                     transition={{ delay: i * 0.04 }}
-                    className="grid grid-cols-12 gap-4 py-4 border-b border-white/5 last:border-0 items-center group hover:bg-white/[0.02] rounded-2xl px-2 transition-all"
+                    className="grid grid-cols-12 gap-4 py-4 border-b border-border/30 last:border-0 items-center group hover:bg-muted/30 rounded-2xl px-2 transition-all fluid-hover"
                   >
                     {/* Name */}
-                    <div className="col-span-4 flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm shrink-0">
+                    <div className="col-span-3 flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-black text-sm shrink-0 shadow-sm">
                         {u.username.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-white leading-tight">{u.username}</p>
+                      <div className="truncate">
+                        <p className="text-sm font-bold text-foreground leading-tight truncate">{u.username}</p>
                         <p className="text-[10px] text-muted-foreground">
                           {new Date(u.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
@@ -205,6 +208,9 @@ export default function AdminPage() {
                         {u.role}
                       </span>
                     </div>
+
+                    {/* Views */}
+                    <div className="col-span-1 text-center text-xs font-bold text-emerald-400">{u.views || 0}</div>
 
                     {/* Currency */}
                     <div className="col-span-1 text-center text-xs font-bold text-muted-foreground">{u.currencyCode}</div>
@@ -242,23 +248,23 @@ export default function AdminPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <DialogContent className="bg-[#161818] border-rose-500/20 rounded-[2.5rem] p-8 max-w-md">
+        <DialogContent className="bg-card border-destructive/20 rounded-[2.5rem] p-8 max-w-md shadow-2xl">
           <DialogHeader className="space-y-4">
             <div className="h-16 w-16 bg-rose-500/10 rounded-3xl flex items-center justify-center text-rose-500 mx-auto">
               <AlertTriangle className="h-8 w-8" />
             </div>
             <div className="space-y-2 text-center">
-              <DialogTitle className="text-2xl font-black text-white tracking-tight">Delete User?</DialogTitle>
+              <DialogTitle className="text-2xl font-black text-foreground tracking-tight">Delete User?</DialogTitle>
               <DialogDescription className="text-muted-foreground font-medium">
-                This will permanently delete <strong className="text-white">{confirmDelete?.username}</strong> and all their data. This cannot be undone.
+                This will permanently delete <strong className="text-foreground">{confirmDelete?.username}</strong> and all their data. This cannot be undone.
               </DialogDescription>
             </div>
           </DialogHeader>
           <DialogFooter className="grid grid-cols-2 gap-4 mt-8">
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => setConfirmDelete(null)}
-              className="h-12 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold"
+              className="h-12 rounded-2xl bg-background hover:bg-muted text-foreground font-bold border-border"
             >
               Cancel
             </Button>

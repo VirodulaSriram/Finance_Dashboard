@@ -112,7 +112,7 @@ export default function GoalsPage() {
         <div className="flex items-center gap-3">
           <Button 
             variant="outline" 
-            className="gap-2 h-11 px-6 text-destructive hover:bg-destructive/5"
+            className="gap-2 h-11 px-6 text-destructive hover:bg-destructive/5 border-destructive/20 rounded-xl transition-all fluid-hover"
             onClick={resetGoals}
             disabled={goals.length === 0}
           >
@@ -253,7 +253,7 @@ export default function GoalsPage() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Card className="overflow-hidden border-none ring-1 ring-border shadow-md hover:shadow-xl transition-all duration-300 group">
+                  <Card className="overflow-hidden border border-border/40 rounded-[2.5rem] card-shadow-md transition-all duration-300 group fluid-hover">
                     <CardHeader className="flex flex-row items-center gap-6 pb-4">
                       <div className={`h-16 w-16 md:h-20 md:w-20 rounded-3xl bg-gradient-to-br ${goal.color} flex items-center justify-center shadow-lg shadow-primary/10 transition-transform group-hover:scale-105`}>
                         {isAchieved ? (
@@ -294,7 +294,7 @@ export default function GoalsPage() {
                                 <Input 
                                   type="number" 
                                   placeholder="0.00" 
-                                  className="h-9 w-24 pl-8 text-xs font-bold bg-white/5 border-white/10 rounded-xl"
+                                  className="h-9 w-24 pl-8 text-xs font-bold bg-background border-border rounded-xl"
                                   value={savingAmounts[goal.id] || ''}
                                   onChange={(e) => setSavingAmounts({...savingAmounts, [goal.id]: e.target.value})}
                                 />
@@ -317,8 +317,8 @@ export default function GoalsPage() {
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: `${percentage}%` }}
-                          transition={{ duration: 1.5, ease: "easeOut" }}
-                          className={`h-full bg-gradient-to-r ${goal.color} rounded-full relative`}
+                          transition={{ duration: 1.5, ease: [0.34, 1.56, 0.64, 1] }}
+                          className={`h-full bg-gradient-to-r ${goal.color} rounded-full relative shadow-[0_0_15px_rgba(0,0,0,0.1)]`}
                         />
                         {isAchieved && (
                           <div className="absolute inset-0 bg-white/10 animate-pulse pointer-events-none" />
@@ -348,21 +348,21 @@ export default function GoalsPage() {
       
       {/* Motivational Toast-like Card */}
       {goals.length > 0 && (
-        <Card className="border-none bg-zinc-900 text-white rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-10">
+        <Card className="border border-primary/20 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-[2.5rem] p-6 card-shadow-lg relative overflow-hidden fluid-hover">
+          <div className="absolute top-0 right-0 p-8 opacity-20">
             <Trophy className="h-40 w-40" />
           </div>
           <CardContent className="p-4 flex flex-col md:flex-row items-center gap-8 relative z-10 text-center md:text-left">
             <div className="space-y-2">
-              <h3 className="text-2xl font-black tracking-tight flex items-center gap-3 justify-center md:justify-start ring-offset-2">
-                <span className="text-amber-400">Achieve faster.</span> Dream bigger.
+              <h3 className="text-2xl font-black tracking-tight flex items-center gap-3 justify-center md:justify-start">
+                <span>Achieve faster.</span> Dream bigger.
               </h3>
-              <p className="text-zinc-400 font-medium text-md max-w-lg leading-relaxed">
+              <p className="text-primary-foreground/80 font-medium text-md max-w-lg leading-relaxed">
                 Stay consistent! Users who track their goals are 40% more likely to achieve them within their deadline.
               </p>
             </div>
             <Button
-              className="bg-white text-black font-black px-10 h-14 rounded-2xl hover:bg-zinc-200 transition-colors shadow-xl shrink-0"
+              className="bg-primary-foreground text-primary font-black px-10 h-14 rounded-2xl hover:bg-primary-foreground/90 transition-colors shadow-xl shrink-0"
               onClick={() => setIsBoostOpen(true)}
             >
               Boost Savings

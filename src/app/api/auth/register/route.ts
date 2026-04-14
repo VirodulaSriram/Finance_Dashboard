@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       username, 
       email, 
       password: hashedPassword, 
-      role: role || 'Admin', 
+      role: role || 'Viewer', 
       country, 
       currencyCode: currencyCode || 'USD' 
     });

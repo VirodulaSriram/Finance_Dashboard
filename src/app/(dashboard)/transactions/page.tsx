@@ -132,7 +132,7 @@ export default function TransactionsPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
-          <h2 className="text-4xl font-black text-white tracking-tighter italic">Transactions</h2>
+          <h2 className="text-4xl font-black text-foreground tracking-tighter italic">Transactions</h2>
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Monitor and manage your financial records</p>
         </div>
         
@@ -141,7 +141,7 @@ export default function TransactionsPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input 
               placeholder="Search history..." 
-              className="h-12 w-full bg-[#161818] border-none rounded-2xl pl-12 text-sm focus:ring-1 focus:ring-primary/50 transition-all shadow-inner"
+              className="h-12 w-full bg-card border border-border/50 rounded-2xl pl-12 text-sm focus:ring-1 focus:ring-primary/50 transition-all shadow-inner"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -150,13 +150,13 @@ export default function TransactionsPage() {
           {role === 'Admin' && (
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger>
-                <Button className="h-12 px-6 rounded-2xl bg-primary text-[#0C0E0E] font-black text-sm gap-2 shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all shrink-0">
+                <Button className="h-12 px-6 rounded-2xl bg-primary text-primary-foreground font-black text-sm gap-2 shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all shrink-0">
                   <Plus className="h-4 w-4" /> Add New
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] rounded-[2.5rem] bg-[#161818] border-white/5 p-8">
+              <DialogContent className="sm:max-w-[425px] rounded-[2.5rem] bg-card border border-border p-8 shadow-2xl">
                 <DialogHeader>
-                  <DialogTitle className="text-white font-black text-2xl tracking-tight">New Transaction</DialogTitle>
+                  <DialogTitle className="text-foreground font-black text-2xl tracking-tight">New Transaction</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 pt-4">
                   <div className="space-y-2">
@@ -167,7 +167,7 @@ export default function TransactionsPage() {
                       id="title" 
                       placeholder={formData.type === 'Income' ? 'Leave blank to use category' : 'e.g., Grocery Shopping'}
                       required={formData.type !== 'Income'}
-                      className="h-12 bg-[#0C0E0E] border-none rounded-xl"
+                      className="h-12 bg-background border border-border rounded-xl"
                       value={formData.title}
                       onChange={e => setFormData(p => ({...p, title: e.target.value}))}
                     />
@@ -179,7 +179,7 @@ export default function TransactionsPage() {
                         id="date" 
                         type="date" 
                         required 
-                        className="h-12 bg-[#0C0E0E] border-none rounded-xl"
+                        className="h-12 bg-background border border-border rounded-xl"
                         value={formData.date}
                         onChange={e => setFormData(p => ({...p, date: e.target.value}))}
                       />
@@ -193,7 +193,7 @@ export default function TransactionsPage() {
                         min="0" 
                         placeholder="0.00" 
                         required 
-                        className="h-12 bg-[#0C0E0E] border-none rounded-xl"
+                        className="h-12 bg-background border border-border rounded-xl"
                         value={formData.amount}
                         onChange={e => setFormData(p => ({...p, amount: e.target.value}))}
                       />
@@ -206,10 +206,10 @@ export default function TransactionsPage() {
                         value={formData.type} 
                         onValueChange={(val) => setFormData(p => ({...p, type: val as TransactionType}))}
                       >
-                        <SelectTrigger className="h-12 bg-[#0C0E0E] border-none rounded-xl">
+                        <SelectTrigger className="h-12 bg-background border border-border rounded-xl">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#161818] border-white/10">
+                        <SelectContent className="bg-card border-border">
                           <SelectItem value="Expense">Expense</SelectItem>
                           <SelectItem value="Income">Income</SelectItem>
                         </SelectContent>
@@ -221,10 +221,10 @@ export default function TransactionsPage() {
                         value={formData.category} 
                         onValueChange={(val) => setFormData(p => ({...p, category: val || 'Other'}))}
                       >
-                        <SelectTrigger className="h-12 bg-[#0C0E0E] border-none rounded-xl">
+                        <SelectTrigger className="h-12 bg-background border border-border rounded-xl">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#161818] border-white/10">
+                        <SelectContent className="bg-card border-border">
                           {formData.type === 'Expense' ? (
                             <>
                               <SelectItem value="Groceries">Groceries</SelectItem>
@@ -263,10 +263,10 @@ export default function TransactionsPage() {
                         value={formData.paymentMethod} 
                         onValueChange={(val) => setFormData(p => ({...p, paymentMethod: val as any}))}
                       >
-                        <SelectTrigger className="h-12 bg-[#0C0E0E] border-none rounded-xl">
+                        <SelectTrigger className="h-12 bg-background border border-border rounded-xl">
                           <SelectValue placeholder="Select method" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#161818] border-white/10">
+                        <SelectContent className="bg-card border-border">
                           <SelectItem value="UPI">UPI Sync</SelectItem>
                           <SelectItem value="Card">Credit/Debit Card</SelectItem>
                           <SelectItem value="Cash">Physical Cash</SelectItem>
@@ -281,10 +281,10 @@ export default function TransactionsPage() {
                         value={formData.status} 
                         onValueChange={(val) => setFormData(p => ({...p, status: val as any}))}
                       >
-                        <SelectTrigger className="h-12 bg-[#0C0E0E] border-none rounded-xl">
+                        <SelectTrigger className="h-12 bg-background border border-border rounded-xl">
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#161818] border-white/10">
+                        <SelectContent className="bg-card border-border">
                           <SelectItem value="Success">Success</SelectItem>
                           <SelectItem value="Waiting">Waiting</SelectItem>
                           <SelectItem value="Declined">Declined</SelectItem>
@@ -300,14 +300,14 @@ export default function TransactionsPage() {
                         id="other-label" 
                         placeholder="Specify category..." 
                         required 
-                        className="h-12 bg-[#0C0E0E] border-none rounded-xl"
+                        className="h-12 bg-background border border-border rounded-xl"
                         value={otherLabel}
                         onChange={e => setOtherLabel(e.target.value)}
                       />
                     </div>
                   )}
                   <DialogFooter className="pt-4">
-                    <Button type="submit" className="w-full h-14 rounded-2xl bg-primary text-[#0C0E0E] font-black shadow-xl shadow-primary/20">Save Transaction</Button>
+                    <Button type="submit" className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-black shadow-xl shadow-primary/20">Save Transaction</Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
@@ -324,10 +324,10 @@ export default function TransactionsPage() {
              onClick={() => setFilterType(type as any)}
              variant="ghost"
              className={cn(
-               "rounded-full px-6 h-10 text-xs font-black uppercase tracking-widest transition-all",
+               "rounded-full px-6 h-10 text-xs font-black uppercase tracking-widest transition-all fluid-hover",
                filterType === type 
-                 ? "bg-primary text-[#0C0E0E] hover:bg-primary/90" 
-                 : "bg-[#161818] text-muted-foreground hover:text-white"
+                 ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                 : "bg-card text-muted-foreground border border-border/50 hover:text-foreground card-shadow-sm"
              )}
            >
              {type}
@@ -336,10 +336,10 @@ export default function TransactionsPage() {
       </div>
 
       {/* Transactions List */}
-      <Card className="bg-[#161818] border-none rounded-[2.5rem] shadow-2xl overflow-hidden">
+      <Card className="bg-card border border-border/40 rounded-[2.5rem] card-shadow-md overflow-hidden">
           <div className="overflow-x-auto">
             <div className="min-w-[600px] p-8 space-y-4">
-              <div className="grid grid-cols-12 gap-4 pb-4 border-b border-white/5 text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+              <div className="grid grid-cols-12 gap-4 pb-4 border-b border-border text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                 <div className="col-span-6">Type &amp; Description</div>
                 <div className="col-span-4 text-right">Amount</div>
                 <div className="col-span-2 text-center">Action</div>
@@ -370,18 +370,18 @@ export default function TransactionsPage() {
                             initial={{ opacity: 0, scale: 0.98 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.98 }}
-                            className="grid grid-cols-12 gap-4 py-4 border-b border-white/5 group hover:bg-white/[0.02] transition-all rounded-[1.5rem] px-2 items-center"
+                            className="grid grid-cols-12 gap-4 py-4 border-b border-border/30 group hover:bg-muted/30 transition-all rounded-[1.5rem] px-2 items-center fluid-hover"
                           >
                             {/* Type & Description Column */}
                             <div className="col-span-6 flex items-center gap-4">
                                <div className={cn(
-                                 "h-14 w-14 rounded-[1.25rem] flex items-center justify-center shrink-0 border border-white/10 transition-transform group-hover:scale-110",
-                                 tx.type === 'Income' ? "bg-emerald-400/5 text-emerald-400" : "bg-[#1C1F1F] text-muted-foreground"
+                                 "h-14 w-14 rounded-[1.25rem] flex items-center justify-center shrink-0 border border-border transition-transform group-hover:scale-110 shadow-sm",
+                                 tx.type === 'Income' ? "bg-emerald-500/10 text-emerald-500" : "bg-background text-muted-foreground"
                                )}>
                                  {tx.type === 'Income' ? <ArrowUpRight className="h-7 w-7" /> : <Receipt className="h-7 w-7" />}
                                </div>
                                <div>
-                                 <h4 className="font-bold text-white text-lg leading-tight group-hover:text-primary transition-colors">{tx.title}</h4>
+                                 <h4 className="font-bold text-foreground text-lg leading-tight group-hover:text-primary transition-colors">{tx.title}</h4>
                                  <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mt-1.5 flex items-center gap-2">
                                     {tx.type} • {new Date(tx.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                  </p>
@@ -390,7 +390,7 @@ export default function TransactionsPage() {
                             
                             {/* Amount Column */}
                             <div className="col-span-4 text-right">
-                               <span className={cn("font-black text-lg tracking-tighter block whitespace-nowrap", tx.type === 'Income' ? "text-emerald-400" : "text-white")}>
+                               <span className={cn("font-black text-lg tracking-tighter block whitespace-nowrap", tx.type === 'Income' ? "text-emerald-500" : "text-foreground")}>
                                   {tx.type === 'Income' ? '+' : '-'}{formatCurrency(tx.amount)}
                                </span>
                                <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mt-1 block whitespace-nowrap">
